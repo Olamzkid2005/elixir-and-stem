@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MerchantTabParamList } from './types';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { MerchantDashboardScreen } from '@/screens/merchant/MerchantDashboardScreen';
@@ -28,6 +29,7 @@ const tabLabels: Record<keyof MerchantTabParamList, string> = {
 };
 
 export function MerchantTabs() {
+  const { bottom } = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -37,9 +39,8 @@ export function MerchantTabs() {
         tabBarStyle: {
           backgroundColor: '#fbf9f4',
           borderTopColor: '#c3c8c1',
-          height: 76,
-          paddingBottom: 14,
           paddingTop: 8,
+          paddingBottom: Math.max(bottom, 14),
         },
         tabBarLabel: ({ color }) => (
           <Text style={{ color }} className="font-body-semibold text-[11px]">

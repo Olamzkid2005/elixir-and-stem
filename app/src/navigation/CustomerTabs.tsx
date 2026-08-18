@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { CustomerTabParamList } from './types';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { useCart } from '@/store/cart';
@@ -30,6 +31,7 @@ const tabLabels: Record<keyof CustomerTabParamList, string> = {
 
 export function CustomerTabs() {
   const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const { bottom } = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -40,9 +42,8 @@ export function CustomerTabs() {
         tabBarStyle: {
           backgroundColor: '#fbf9f4',
           borderTopColor: '#c3c8c1',
-          height: 76,
-          paddingBottom: 14,
           paddingTop: 8,
+          paddingBottom: Math.max(bottom, 14),
         },
         tabBarLabel: ({ color, focused }) => (
           <Text
