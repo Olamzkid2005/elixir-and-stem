@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Elixir & Stem",
+    "slug": "elixir-and-stem",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "elixirandstem",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#fbf9f4",
+    "splash": {
+      "backgroundColor": "#fbf9f4"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elixirandstem.app"
+    },
+    "android": {
+      "package": "com.elixirandstem.app"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Elixir & Stem to use your location to find dispensaries near you."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Elixir & Stem to access your photos to upload license documents.",
+          "cameraPermission": "Allow Elixir & Stem to use your camera to photograph license documents."
+        }
+      ],
+      "expo-secure-store",
+      "expo-notifications"
+    ]
+  }
+}

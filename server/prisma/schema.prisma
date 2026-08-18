@@ -1,0 +1,117 @@
+// Elixir & Stem — Prisma schema
+// Merchants stay `pending` until an admin approves them (no auto-approval logic anywhere).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  customer
+  merchant
+  admin
+}
+
+enum MerchantStatus {
+  pending
+  approved
+  rejected
+}
+
+enum OrderStatus {
+  placed
+  confirmed
+  out_for_delivery
+  delivered
+  rejected
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  role         Role      @default(customer)
+  ageVerified  Boolean   @default(false)
+  suspended    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  merchant Merchant?
+  orders   Order[]   @relation("CustomerOrders")
+}
+
+model Merchant {
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id])
+  businessName  String
+  licenseNumber String
+  licenseDocUrl String?
+  status        MerchantStatus @default(pending) // manual admin approval only
+  address       String
+  lat           Float
+  lng           Float
+  // Per-state compliance rules can be layered on per-merchant here later
+  // (delivery windows, purchase limits, product restrictions) without rewrites.
+  stateCode     String?
+  createdAt     DateTime       @default(now())
+
+  products Product[]
+  orders   Order[]
+}
+
+model Product {
+  id          String  @id @default(cuid())
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  name        String
+  brand       String  @default("")
+  category    String // Flower | Edibles | Vapes | Concentrates | Tinctures | Topicals
+  strainType  String? // sativa | indica | hybrid
+  thcPct      Float?
+  cbdPct      Float?
+  description String  @default("")
+  terpenes    String[] @default([])
+  price       Int // base price in cents (see weightOptions for tiers)
+  weightOptions Json  // [{ label: "3.5g", price: 4500 }, ...]
+  stock       Int     @default(0)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  customerId      String
+  customer        User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  merchantId      String
+  merchant        Merchant    @relation(fields: [merchantId], references: [id])
+  status          OrderStatus @default(placed)
+  paymentMethod   String      @default("pay_on_delivery")
+  deliveryAddress String
+  notes           String?
+  scheduledFor    DateTime?
+  subtotal        Int // cents
+  tax             Int
+  deliveryFee     Int
+  total           Int
+  createdAt       DateTime    @default(now())
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id              String  @id @default(cuid())
+  orderId         String
+  order           Order   @relation(fields: [orderId], references: [id])
+  productId       String
+  product         Product @relation(fields: [productId], references: [id])
+  quantity        Int
+  weightLabel     String  @default("")
+  priceAtPurchase Int // cents
+}
