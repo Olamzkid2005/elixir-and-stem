@@ -21,7 +21,7 @@ export function FeaturedCard({
 }) {
   return (
     <Pressable onPress={onPress} className="mr-4 w-64 active:opacity-90">
-      <ProductImage color={product.imageColor} className="h-40 w-64 rounded-2xl" />
+      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-40 w-64 rounded-2xl" />
       <View className="mt-3 flex-row items-center justify-between">
         <Badge variant="secondary" label={strainLabel(product)} />
         <View className="flex-row items-center gap-1">
@@ -54,7 +54,7 @@ export function ProductRowCard({
       onPress={onPress}
       className="mb-3 flex-row items-center gap-4 rounded-2xl bg-surface-container-lowest p-3 active:bg-surface-container"
     >
-      <ProductImage color={product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
+      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
       <View className="flex-1">
         <Badge variant="outline" label={strainLabel(product)} className="mb-1 px-2 py-0.5" />
         <Text className="font-headline text-base text-on-surface">{product.name}</Text>

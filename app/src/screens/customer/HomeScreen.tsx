@@ -134,7 +134,7 @@ export function HomeScreen() {
                   onPress={() => navigation.navigate('ProductDetail', { product: item })}
                   className="mr-3 w-36 overflow-hidden rounded-2xl bg-surface-container-lowest"
                 >
-                  <ProductImage color={item.imageColor} className="h-28 w-full" iconSize={32} />
+                  <ProductImage imageUrl={item.imageUrl} color={item.imageColor} className="h-28 w-full" iconSize={32} />
                   <View className="p-2.5">
                     <Text className="font-headline text-sm text-on-surface" numberOfLines={1}>
                       {item.name}

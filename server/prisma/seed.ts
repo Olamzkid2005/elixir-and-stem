@@ -87,6 +87,7 @@ async function main() {
       weightOptions: [{ label: '3.5g', price: 4500 }, { label: '7g', price: 8500 }, { label: '14g', price: 16000 }],
       stock: 42, description: 'A bright, berry-forward sativa with gentle cerebral lift.',
       terpenes: ['Myrcene', 'Pinene', 'Caryophyllene'], imageColor: '#cfeaca',
+      imageUrl: 'https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=600&h=600&fit=crop',
     },
     {
       name: 'Granddaddy Purple', brand: 'Elixir Reserve', category: 'Flower', strainType: 'indica',
@@ -94,6 +95,7 @@ async function main() {
       weightOptions: [{ label: '3.5g', price: 5000 }, { label: '7g', price: 9500 }, { label: '14g', price: 18000 }],
       stock: 28, description: 'Deep grape and berry notes with a heavy, settling body feel.',
       terpenes: ['Myrcene', 'Linalool', 'Caryophyllene'], imageColor: '#e4e2dd',
+      imageUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&h=600&fit=crop',
     },
     {
       name: 'Lush Orchard', brand: 'Orchard Line', category: 'Flower', strainType: 'indica',
@@ -101,6 +103,7 @@ async function main() {
       weightOptions: [{ label: '3.5g', price: 4500 }, { label: '7g', price: 8600 }, { label: '14g', price: 16200 }],
       stock: 35, description: 'A sweet, earthy profile with notes of ripe fruit and pine.',
       terpenes: ['Myrcene', 'Limonene', 'Caryophyllene'], imageColor: '#d0e9d4',
+      imageUrl: 'https://images.unsplash.com/photo-1599839575338-3d8159f4974b?w=600&h=600&fit=crop',
     },
     {
       name: 'Wedding Cake', brand: 'House Cultivar', category: 'Flower', strainType: 'hybrid',
@@ -108,6 +111,7 @@ async function main() {
       weightOptions: [{ label: '3.5g', price: 5500 }, { label: '7g', price: 10500 }, { label: '14g', price: 20000 }],
       stock: 19, description: 'Rich vanilla and pepper over a calm, balanced hybrid base.',
       terpenes: ['Limonene', 'Caryophyllene', 'Linalool'], imageColor: '#f0eee9',
+      imageUrl: 'https://images.unsplash.com/photo-1601473824699-b077dd2cbb3e?w=600&h=600&fit=crop',
     },
     {
       name: 'Sour Diesel', brand: 'House Cultivar', category: 'Flower', strainType: 'sativa',
@@ -115,6 +119,7 @@ async function main() {
       weightOptions: [{ label: '3.5g', price: 4000 }, { label: '7g', price: 7600 }, { label: '14g', price: 14400 }],
       stock: 51, description: 'Pungent citrus-fuel sativa with a fast, energizing onset.',
       terpenes: ['Limonene', 'Myrcene', 'Pinene'], imageColor: '#cfeaca',
+      imageUrl: 'https://images.unsplash.com/photo-1603386329225-868f9b1ee6c9?w=600&h=600&fit=crop',
     },
     {
       name: 'Clarity Drops', brand: 'Stem Apothecary', category: 'Tinctures',
@@ -122,6 +127,7 @@ async function main() {
       weightOptions: [{ label: '30ml', price: 8500 }],
       stock: 24, description: 'CBD-rich sublingual tincture, 30ml bottle with measured dropper.',
       terpenes: [], imageColor: '#ffdea5',
+      imageUrl: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=600&h=600&fit=crop',
     },
     {
       name: 'Soothe Confections', brand: 'Stem Apothecary', category: 'Edibles',
@@ -129,6 +135,7 @@ async function main() {
       weightOptions: [{ label: '20 pack', price: 3500 }],
       stock: 60, description: '20 pieces, 10mg THC each. Slow-baked fruit confections.',
       terpenes: [], imageColor: '#e9c176',
+      imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=600&fit=crop',
     },
   ];
 

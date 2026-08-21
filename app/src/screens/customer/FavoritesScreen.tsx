@@ -54,6 +54,7 @@ export function FavoritesScreen() {
             >
               <View className="relative">
                 <ProductImage
+                  imageUrl={product.imageUrl}
                   color={product.imageColor}
                   className="h-36 w-full"
                   iconSize={40}

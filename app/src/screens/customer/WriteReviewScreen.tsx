@@ -14,7 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WriteReview'>;
 
 /** WriteReviewScreen — star picker (1–5) + optional text comment. */
 export function WriteReviewScreen({ route, navigation }: Props) {
-  const { orderItemId, productName, productImageColor } = route.params;
+  const { orderItemId, productName, productImageColor, imageUrl } = route.params;
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,6 +46,7 @@ export function WriteReviewScreen({ route, navigation }: Props) {
         {/* Product preview */}
         <View className="mt-4 flex-row items-center gap-3 rounded-2xl bg-surface-container-lowest p-4">
           <ProductImage
+            imageUrl={imageUrl}
             color={productImageColor ?? '#d0e9d4'}
             className="h-14 w-14 rounded-xl"
             iconSize={22}

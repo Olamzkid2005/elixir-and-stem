@@ -183,6 +183,8 @@ export function OrderTrackingScreen({ route }: Props) {
                     navigation.navigate('WriteReview', {
                       orderItemId: item.id ?? '',
                       productName: item.name,
+                      productImageColor: item.imageColor,
+                      imageUrl: item.imageUrl,
                     })
                   }
                   className="flex-row items-center gap-1.5 rounded-full bg-secondary-container px-3 py-2"

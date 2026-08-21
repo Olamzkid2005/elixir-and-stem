@@ -54,7 +54,7 @@ export function InventoryScreen() {
               key={p.id}
               className="mb-3 flex-row items-center gap-3 rounded-2xl bg-surface-container-lowest p-3"
             >
-              <ProductImage color={p.imageColor} className="h-16 w-16 rounded-xl" iconSize={24} />
+              <ProductImage imageUrl={p.imageUrl} color={p.imageColor} className="h-16 w-16 rounded-xl" iconSize={24} />
               <View className="flex-1">
                 <Text className="font-body-semibold text-base text-on-surface">{p.name}</Text>
                 <Text className="font-body text-xs text-on-surface-variant">

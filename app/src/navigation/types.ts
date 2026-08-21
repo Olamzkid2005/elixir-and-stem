@@ -29,6 +29,6 @@ export type RootStackParamList = {
   OrderTracking: { orderId?: string };
   ProductForm: { productId?: string };
   Favorites: undefined;
-  WriteReview: { orderItemId: string; productName: string; productImageColor?: string };
+  WriteReview: { orderItemId: string; productName: string; productImageColor?: string; imageUrl?: string | null };
   Rewards: undefined;
 };

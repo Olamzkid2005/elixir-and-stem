@@ -61,7 +61,8 @@ export interface Product {
   effects: { icon: string; label: string }[];
   weightOptions: WeightOption[];
   stock: number;
-  imageColor: string; // placeholder art color (swap for imageUrl from S3)
+  imageColor: string; // placeholder art color
+  imageUrl?: string | null; // real product photo URL
   rating: number;
   reviews: number;
 }
@@ -79,6 +80,8 @@ export interface OrderItem {
   weightLabel: string;
   quantity: number;
   priceAtPurchase: number; // cents
+  imageUrl?: string | null;
+  imageColor?: string;
 }
 
 export interface Order {

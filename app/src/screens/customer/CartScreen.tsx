@@ -48,7 +48,7 @@ export function CartScreen() {
               key={`${item.product.id}-${item.weight.label}`}
               className="mb-3 flex-row gap-3 rounded-2xl bg-surface-container-lowest p-3"
             >
-              <ProductImage color={item.product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
+              <ProductImage imageUrl={item.product.imageUrl} color={item.product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
               <View className="flex-1">
                 <View className="flex-row items-start justify-between">
                   <View>

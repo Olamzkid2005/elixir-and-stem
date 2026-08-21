@@ -1,22 +1,36 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { Icon } from './ui/Icon';
 import { cn } from '@/lib/utils';
 
 /**
- * Placeholder product art — a tinted tile with the brand leaf glyph.
- * Uses a two-tone treatment: lighter overlay + centered icon for visual depth.
- * Swap for expo-image once product photos land in S3 (products.image_url).
+ * Product image — shows a real photo when imageUrl is provided,
+ * otherwise falls back to a tinted placeholder tile with leaf icon.
  */
 export function ProductImage({
+  imageUrl,
   color,
   className,
   iconSize = 36,
 }: {
+  imageUrl?: string | null;
   color: string;
   className?: string;
   iconSize?: number;
 }) {
+  if (imageUrl) {
+    return (
+      <View className={cn('overflow-hidden', className)}>
+        <Image
+          source={{ uri: imageUrl }}
+          className="h-full w-full"
+          resizeMode="cover"
+        />
+      </View>
+    );
+  }
+
+  // Placeholder tile
   return (
     <View
       style={{ backgroundColor: color }}

@@ -49,7 +49,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
         {/* Hero with favorites toggle */}
         <View className="px-4">
           <View className="relative">
-            <ProductImage color={product.imageColor} className="h-72 w-full rounded-2xl" iconSize={72} />
+            <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-72 w-full rounded-2xl" iconSize={72} />
             <Pressable
               onPress={() => toggle(product.id)}
               hitSlop={8}

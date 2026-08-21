@@ -17,17 +17,33 @@ ordersRouter.get('/', requireAuth, async (req, res) => {
     else if (scheduled === 'false') where.scheduledFor = null;
     const orders = await prisma.order.findMany({
       where,
-      include: { items: true, merchant: { select: { businessName: true } } },
+      include: { items: { include: { product: { select: { imageUrl: true, imageColor: true } } } }, merchant: { select: { businessName: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    return res.json(orders.map((o) => ({ ...o, merchantName: o.merchant?.businessName ?? '' })));
+    return res.json(orders.map((o) => ({
+      ...o,
+      merchantName: o.merchant?.businessName ?? '',
+      items: o.items.map((item) => ({
+        ...item,
+        imageUrl: item.product?.imageUrl,
+        imageColor: item.product?.imageColor,
+      })),
+    })));
   }
   const orders = await prisma.order.findMany({
     where: { customerId: req.user!.id },
-    include: { items: true, merchant: { select: { businessName: true } } },
+    include: { items: { include: { product: { select: { imageUrl: true, imageColor: true } } } }, merchant: { select: { businessName: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  res.json(orders.map((o) => ({ ...o, merchantName: o.merchant?.businessName ?? '' })));
+  res.json(orders.map((o) => ({
+    ...o,
+    merchantName: o.merchant?.businessName ?? '',
+    items: o.items.map((item) => ({
+      ...item,
+      imageUrl: item.product?.imageUrl,
+      imageColor: item.product?.imageColor,
+    })),
+  })));
 });
 
 const createInput = z.object({
@@ -65,7 +81,7 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
     const tiers = product.weightOptions as { label: string; price: number }[];
     const tier = tiers.find((t) => t.label === i.weightLabel) ?? { price: product.price };
     subtotal += tier.price * i.quantity;
-    return { productId: product.id, quantity: i.quantity, weightLabel: i.weightLabel, priceAtPurchase: tier.price };
+    return { productId: product.id, quantity: i.quantity, weightLabel: i.weightLabel, priceAtPurchase: tier.price, imageUrl: product.imageUrl, imageColor: product.imageColor };
   });
 
   const tax = Math.round(subtotal * 0.095);
