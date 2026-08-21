@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Constants from 'expo-constants';
 import { Screen } from '@/components/ui/Screen';
 import { AppHeader, SectionTitle } from '@/components/AppHeader';
 import { Badge } from '@/components/ui/Badge';
@@ -13,6 +14,7 @@ import { useFavorites } from '@/store/favorites';
 import { useLoyalty, TIER_LABELS, getPointsToNextTier, getTierProgress } from '@/store/loyalty';
 import { api } from '@/api/client';
 import { formatPrice } from '@/api/types';
+import { sendLocalTestNotification } from '@/lib/notifications';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -179,8 +181,14 @@ export function ProfileScreen() {
             onPress={async () => {
               setTestingNotification(true);
               try {
-                const result = await api.sendTestNotification();
-                Alert.alert('Sent!', result.message);
+                // Use local notification in Expo Go, backend endpoint in dev build
+                if (Constants.executionEnvironment === 'storeClient') {
+                  await sendLocalTestNotification();
+                  Alert.alert('Local Notification Sent!', 'This is a local notification (Expo Go). For remote push, use a development build.');
+                } else {
+                  const result = await api.sendTestNotification();
+                  Alert.alert('Sent!', result.message);
+                }
               } catch (e) {
                 Alert.alert('Failed', e instanceof Error ? e.message : 'Could not send notification.');
               } finally {

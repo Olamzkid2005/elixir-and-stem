@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { api, useMock } from '@/api/client';
 
 /**
@@ -16,11 +17,29 @@ Notifications.setNotificationHandler({
 });
 
 /**
+ * Detect if we're running in Expo Go (remote push not supported since SDK 53).
+ */
+function isExpoGo(): boolean {
+  return Constants.executionEnvironment === 'storeClient';
+}
+
+/**
  * Request push notification permissions and return the Expo push token.
- * Returns null if permissions denied or running in mock mode.
+ * Returns null if:
+ * - Running in mock mode
+ * - Running in Expo Go (remote push removed in SDK 53)
+ * - Permissions denied
+ * - Not a physical device
  */
 export async function registerForPushNotifications(): Promise<string | null> {
   if (useMock) return null;
+
+  // Remote push doesn't work in Expo Go since SDK 53
+  if (isExpoGo()) {
+    console.log('[Push] Expo Go detected — remote push notifications require a development build');
+    console.log('[Push] Local notifications will still work. Use "Send Test Notification" in Profile for testing.');
+    return null;
+  }
 
   // Check existing permissions
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -44,6 +63,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   // Register with backend
   try {
     await api.registerPushToken(pushToken, Platform.OS as 'ios' | 'android');
+    console.log('[Push] Token registered with backend:', pushToken);
   } catch (err) {
     console.error('[Push] Failed to register token with backend:', err);
   }
@@ -59,6 +79,21 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 
   return pushToken;
+}
+
+/**
+ * Send a local notification (works in Expo Go).
+ * Used for testing when remote push isn't available.
+ */
+export async function sendLocalTestNotification(): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: '🌿 Elixir & Stem',
+      body: 'Push notifications are working! This is a local test notification.',
+      data: { type: 'test' },
+    },
+    trigger: null, // immediate
+  });
 }
 
 /**
