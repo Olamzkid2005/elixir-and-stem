@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/ui/Screen';
@@ -11,6 +11,7 @@ import { useAuth } from '@/store/auth';
 import { useOrders } from '@/store/orders';
 import { useFavorites } from '@/store/favorites';
 import { useLoyalty, TIER_LABELS, getPointsToNextTier, getTierProgress } from '@/store/loyalty';
+import { api } from '@/api/client';
 import { formatPrice } from '@/api/types';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -23,6 +24,7 @@ export function ProfileScreen() {
   const { orders, refresh: refreshOrders } = useOrders();
   const { favorites, refresh: refreshFavorites } = useFavorites();
   const { points, tier, refresh: refreshLoyalty } = useLoyalty();
+  const [testingNotification, setTestingNotification] = useState(false);
 
   useEffect(() => {
     refreshOrders();
@@ -164,6 +166,28 @@ export function ProfileScreen() {
               </View>
             </View>
           ))}
+        </View>
+
+        {/* Debug: test push notification */}
+        <SectionTitle title="Debug" />
+        <View className="mx-4 gap-3">
+          <Button
+            label="Send Test Notification"
+            icon="notifications"
+            variant="secondary"
+            loading={testingNotification}
+            onPress={async () => {
+              setTestingNotification(true);
+              try {
+                const result = await api.sendTestNotification();
+                Alert.alert('Sent!', result.message);
+              } catch (e) {
+                Alert.alert('Failed', e instanceof Error ? e.message : 'Could not send notification.');
+              } finally {
+                setTestingNotification(false);
+              }
+            }}
+          />
         </View>
 
         <View className="mx-4 mb-10 mt-6 gap-3">

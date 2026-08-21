@@ -232,4 +232,9 @@ export const api = {
     if (useMock) return;
     await request('/push-tokens', { method: 'DELETE' });
   },
+
+  async sendTestNotification(): Promise<{ ok: boolean; message: string }> {
+    if (useMock) return { ok: true, message: 'Test notification sent (mock mode).' };
+    return request<{ ok: boolean; message: string }>('/push-tokens/test', { method: 'POST' });
+  },
 };

@@ -146,6 +146,52 @@ describe('Push Token Routes', () => {
     });
   });
 
+  describe('POST /push-tokens/test', () => {
+    it('should send a test notification when tokens are registered', async () => {
+      const customer = getCustomer();
+
+      // Register a token first
+      await request(app)
+        .post('/push-tokens')
+        .set('Authorization', `Bearer ${customer.token}`)
+        .send({
+          token: 'ExponentPushToken[test-notification-token]',
+          platform: 'ios',
+        });
+
+      const res = await request(app)
+        .post('/push-tokens/test')
+        .set('Authorization', `Bearer ${customer.token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.ok).toBe(true);
+      expect(res.body.message).toMatch(/1 device/);
+    });
+
+    it('should reject when no tokens are registered', async () => {
+      // Create a fresh user with no tokens
+      const signupRes = await request(app)
+        .post('/auth/signup')
+        .send({
+          email: 'no-tokens-user@example.com',
+          password: 'testpass123',
+          role: 'customer',
+        });
+
+      const res = await request(app)
+        .post('/push-tokens/test')
+        .set('Authorization', `Bearer ${signupRes.body.token}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/No push tokens/);
+    });
+
+    it('should reject unauthenticated request', async () => {
+      const res = await request(app).post('/push-tokens/test');
+      expect(res.status).toBe(401);
+    });
+  });
+
   describe('Push notifications on order status change', () => {
     it('should not fail when sending notifications (no tokens registered)', async () => {
       const customer = getCustomer();

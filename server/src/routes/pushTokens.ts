@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma, requireAuth } from '../auth';
+import { notifyUser } from '../notifications';
 
 export const pushTokensRouter = Router();
 
@@ -59,4 +60,21 @@ pushTokensRouter.delete('/:token', async (req, res) => {
   }
   await prisma.pushToken.delete({ where: { id: existing.id } });
   res.json({ ok: true });
+});
+
+/** POST /push-tokens/test — send a test notification to the current user */
+pushTokensRouter.post('/test', async (req, res) => {
+  const tokenCount = await prisma.pushToken.count({ where: { userId: req.user!.id } });
+  if (tokenCount === 0) {
+    return res.status(400).json({ error: 'No push tokens registered. Open the app on a device to register.' });
+  }
+
+  await notifyUser(
+    req.user!.id,
+    '🔔 Test Notification',
+    'Push notifications are working! You\'ll receive alerts for order updates.',
+    { screen: 'Profile' }
+  );
+
+  res.json({ ok: true, message: `Test notification sent to ${tokenCount} device(s).` });
 });
