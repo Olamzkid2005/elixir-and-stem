@@ -174,10 +174,7 @@ export const api = {
   // ── Favorites ──────────────────────────────────────────
 
   async toggleFavorite(productId: string): Promise<{ favorited: boolean }> {
-    if (useMock) {
-      // Toggle in-memory (won't persist across sessions in mock mode)
-      return { favorited: true };
-    }
+    if (useMock) return { favorited: true };
     return request<{ favorited: boolean }>('/favorites', {
       method: 'POST',
       body: JSON.stringify({ productId }),
@@ -185,7 +182,7 @@ export const api = {
   },
 
   async listFavorites(): Promise<Product[]> {
-    if (useMock) return mockProducts.slice(0, 3); // return first 3 as "favorited"
+    if (useMock) return mockProducts.slice(0, 3);
     return request<Product[]>('/favorites');
   },
 

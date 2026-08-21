@@ -17,17 +17,17 @@ ordersRouter.get('/', requireAuth, async (req, res) => {
     else if (scheduled === 'false') where.scheduledFor = null;
     const orders = await prisma.order.findMany({
       where,
-      include: { items: true },
+      include: { items: true, merchant: { select: { businessName: true } } },
       orderBy: { createdAt: 'desc' },
     });
-    return res.json(orders);
+    return res.json(orders.map((o) => ({ ...o, merchantName: o.merchant?.businessName ?? '' })));
   }
   const orders = await prisma.order.findMany({
     where: { customerId: req.user!.id },
-    include: { items: true },
+    include: { items: true, merchant: { select: { businessName: true } } },
     orderBy: { createdAt: 'desc' },
   });
-  res.json(orders);
+  res.json(orders.map((o) => ({ ...o, merchantName: o.merchant?.businessName ?? '' })));
 });
 
 const createInput = z.object({
@@ -68,7 +68,6 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
     return { productId: product.id, quantity: i.quantity, weightLabel: i.weightLabel, priceAtPurchase: tier.price };
   });
 
-  // TODO: per-state tax/delivery rules resolve via merchant.stateCode here.
   const tax = Math.round(subtotal * 0.095);
   const deliveryFee = 500;
 
@@ -92,7 +91,7 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
   // Notify merchant of new order (fire-and-forget)
   notifyNewOrder(merchant.userId, order.id, req.user!.id, order.total).catch(() => {});
 
-  res.status(201).json(order);
+  res.status(201).json({ ...order, merchantName: merchant.businessName });
 });
 
 /** PATCH /orders/:id/status — merchant advances the fulfillment state machine. */
@@ -128,5 +127,5 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
   // Send push notification to customer (fire-and-forget)
   notifyOrderStatusChange(order.id, order.customerId, status, merchant.businessName).catch(() => {});
 
-  res.json(updated);
+  res.json({ ...updated, merchantName: merchant.businessName });
 });

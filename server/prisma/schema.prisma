@@ -61,9 +61,11 @@ model Merchant {
   lng           Float
   // Per-state compliance rules can be layered on per-merchant here later
   // (delivery windows, purchase limits, product restrictions) without rewrites.
-  stateCode     String?
-  rating        Float?         @default(0) // denormalized avg rating
-  createdAt     DateTime       @default(now())
+  stateCode       String?
+  rating          Float?         @default(0) // denormalized avg rating
+  deliveryEtaMin  Int            @default(45) // estimated min delivery minutes
+  deliveryEtaMax  Int            @default(60) // estimated max delivery minutes
+  createdAt       DateTime       @default(now())
 
   products Product[]
   orders   Order[]
@@ -85,6 +87,8 @@ model Product {
   weightOptions Json  // [{ label: "3.5g", price: 4500 }, ...]
   stock         Int      @default(0)
   imageUrl      String?
+  imageColor    String?  @default("#d0e9d4") // placeholder art color (swap for imageUrl from S3)
+  effects       Json?    // [{ icon: "mood", label: "Energetic" }, ...] — derived from strainType/category
   rating        Float?   @default(0) // denormalized avg rating
   reviewCount   Int      @default(0) // denormalized count
   createdAt     DateTime @default(now())

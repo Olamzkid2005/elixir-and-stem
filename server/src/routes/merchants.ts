@@ -17,7 +17,11 @@ const registration = z.object({
 /** GET /merchants — public: only approved shops are visible to customers. */
 merchantsRouter.get('/', async (_req, res) => {
   const merchants = await prisma.merchant.findMany({ where: { status: 'approved' } });
-  res.json(merchants);
+  res.json(merchants.map((m) => ({
+    ...m,
+    deliveryEtaMins: [m.deliveryEtaMin, m.deliveryEtaMax] as [number, number],
+    distanceMiles: undefined,
+  })));
 });
 
 /** GET /merchants/me — the signed-in merchant's own record (any status). */
