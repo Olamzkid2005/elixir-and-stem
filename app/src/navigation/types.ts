@@ -9,12 +9,20 @@ export type CustomerTabParamList = {
   Profile: undefined;
 };
 
+export type CustomerDrawerParamList = {
+  Tabs: NavigatorScreenParams<CustomerTabParamList>;
+};
+
 export type MerchantTabParamList = {
   Dashboard: undefined;
   Inventory: undefined;
   OrderQueue: undefined;
   Analytics: undefined;
   MerchantProfile: undefined;
+};
+
+export type MerchantDrawerParamList = {
+  Tabs: NavigatorScreenParams<MerchantTabParamList>;
 };
 
 export type RootStackParamList = {

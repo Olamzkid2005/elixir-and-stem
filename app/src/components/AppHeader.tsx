@@ -1,6 +1,6 @@
 import React from 'react';
+import { DrawerActions, useNavigation } from '@react-navigation/native';
 import { Pressable, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { Icon } from './ui/Icon';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +21,11 @@ export function AppHeader({ back = false }: { back?: boolean }) {
           <Icon name="arrow_back" size={24} color="#1b1c19" />
         </Pressable>
       ) : (
-        <Pressable hitSlop={12} className="h-11 w-11 items-center justify-center rounded-full">
+        <Pressable
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          hitSlop={12}
+          className="h-11 w-11 items-center justify-center rounded-full"
+        >
           <Icon name="menu" size={24} color="#1b1c19" />
         </Pressable>
       )}

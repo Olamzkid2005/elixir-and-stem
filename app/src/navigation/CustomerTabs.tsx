@@ -1,10 +1,13 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { CustomerTabParamList } from './types';
+import type { CustomerTabParamList, CustomerDrawerParamList } from './types';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { useCart } from '@/store/cart';
+import { useAuth } from '@/store/auth';
+import { DrawerContent } from './DrawerContent';
 import { HomeScreen } from '@/screens/customer/HomeScreen';
 import { BrowseScreen } from '@/screens/customer/BrowseScreen';
 import { CartScreen } from '@/screens/customer/CartScreen';
@@ -12,6 +15,7 @@ import { OrdersScreen } from '@/screens/customer/OrdersScreen';
 import { ProfileScreen } from '@/screens/customer/ProfileScreen';
 
 const Tab = createBottomTabNavigator<CustomerTabParamList>();
+const Drawer = createDrawerNavigator<CustomerDrawerParamList>();
 
 const tabIcons: Record<keyof CustomerTabParamList, IconName> = {
   Home: 'home',
@@ -29,7 +33,7 @@ const tabLabels: Record<keyof CustomerTabParamList, string> = {
   Profile: 'Profile',
 };
 
-export function CustomerTabs() {
+function CustomerTabNavigator() {
   const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
   const { bottom } = useSafeAreaInsets();
   return (
@@ -71,5 +75,23 @@ export function CustomerTabs() {
       <Tab.Screen name="Orders" component={OrdersScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+  );
+}
+
+export function CustomerTabs() {
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <DrawerContent {...props} />}
+      screenOptions={{
+        headerShown: false,
+        drawerStyle: {
+          backgroundColor: '#fbf9f4',
+          width: 300,
+        },
+        overlayColor: 'rgba(0,0,0,0.4)',
+      }}
+    >
+      <Drawer.Screen name="Tabs" component={CustomerTabNavigator} />
+    </Drawer.Navigator>
   );
 }
