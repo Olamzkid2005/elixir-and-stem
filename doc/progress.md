@@ -117,20 +117,23 @@ cd server && npm test       # 92 tests across 10 suites
 - Merchant can mark order ready_for_pickup when prepared
 - Bank account field added to Merchant model for payouts
 
-## Test coverage (92 tests, 10 suites)
+## Test coverage (127 tests, 13 suites)
 
 | Suite | Tests |
 |-------|-------|
 | auth.test.ts | 8 |
 | merchants.test.ts | 7 |
 | products.test.ts | 9 |
-| orders.test.ts | 11 |
+| orders.test.ts | 12 |
 | favorites.test.ts | 6 |
 | reviews.test.ts | 7 |
-| loyalty.test.ts | 6 |
+| loyalty.test.ts | 8 |
 | admin.test.ts | 7 |
 | pushTokens.test.ts | 14 |
 | search.test.ts | 10 |
+| riders.test.ts | 12 |
+| delivery.test.ts | 11 |
+| tax.test.ts | 15 |
 
 ## Known gaps
 
