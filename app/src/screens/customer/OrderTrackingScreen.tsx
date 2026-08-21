@@ -1,16 +1,19 @@
 import React, { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { AppHeader } from '@/components/AppHeader';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrders } from '@/store/orders';
-import type { OrderStatus } from '@/api/types';
+import { formatPrice, type OrderStatus } from '@/api/types';
 import { cn } from '@/lib/utils';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'OrderTracking'>;
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const STEPS: { status: OrderStatus; label: string }[] = [
   { status: 'placed', label: 'Order Received' },
@@ -19,8 +22,9 @@ const STEPS: { status: OrderStatus; label: string }[] = [
   { status: 'delivered', label: 'Arrived' },
 ];
 
-/** Order Tracking — ETA card, courier card, vertical status timeline. */
+/** Order Tracking — ETA card, courier card, vertical status timeline, review CTA for delivered. */
 export function OrderTrackingScreen({ route }: Props) {
+  const navigation = useNavigation<Nav>();
   const { activeOrder, orders, advanceActiveStatus } = useOrders();
   const order = useMemo(() => {
     if (activeOrder && (!route.params?.orderId || activeOrder.id === route.params.orderId)) {
@@ -44,6 +48,7 @@ export function OrderTrackingScreen({ route }: Props) {
 
   const activeIdx = STEPS.findIndex((s) => s.status === order.status);
   const isLive = order.status !== 'delivered' && order.status !== 'rejected';
+  const isDelivered = order.status === 'delivered';
 
   return (
     <Screen>
@@ -154,6 +159,43 @@ export function OrderTrackingScreen({ route }: Props) {
             );
           })}
         </View>
+
+        {/* Review CTA for delivered orders */}
+        {isDelivered && order.items.length > 0 && (
+          <>
+            <Text className="mb-3 mt-7 font-headline text-xl text-on-surface">Leave a Review</Text>
+            <Text className="mb-4 font-body text-sm text-on-surface-variant">
+              Share your experience to help other customers.
+            </Text>
+            {order.items.map((item) => (
+              <View
+                key={item.productId}
+                className="mb-3 flex-row items-center gap-3 rounded-2xl bg-surface-container-lowest p-4"
+              >
+                <View className="flex-1">
+                  <Text className="font-body-semibold text-base text-on-surface">{item.name}</Text>
+                  <Text className="font-body text-xs text-on-surface-variant">
+                    {item.weightLabel} • {formatPrice(item.priceAtPurchase)}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate('WriteReview', {
+                      orderItemId: item.id ?? '',
+                      productName: item.name,
+                    })
+                  }
+                  className="flex-row items-center gap-1.5 rounded-full bg-secondary-container px-3 py-2"
+                >
+                  <Icon name="rate_review" size={16} color="#4d644b" />
+                  <Text className="font-body-semibold text-xs text-on-secondary-container">
+                    Review
+                  </Text>
+                </Pressable>
+              </View>
+            ))}
+          </>
+        )}
 
         <Button
           label="Contact Support"

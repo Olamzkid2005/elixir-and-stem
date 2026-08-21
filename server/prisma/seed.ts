@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-/** Seed: one admin, one approved merchant + menu, one pending merchant, one customer. */
+/** Seed: admin, approved merchant + menu, pending merchant, customer, sample reviews/orders/loyalty. */
 async function main() {
   const password = await bcrypt.hash('password123', 10);
 
@@ -54,7 +54,7 @@ async function main() {
     },
   });
 
-  await prisma.user.upsert({
+  const customer = await prisma.user.upsert({
     where: { email: 'customer@example.com' },
     update: {},
     create: { email: 'customer@example.com', passwordHash: password, role: 'customer', ageVerified: true },
@@ -112,12 +112,135 @@ async function main() {
     },
   ];
 
+  const createdProducts = [];
   for (const p of products) {
     const found = await prisma.product.findFirst({ where: { name: p.name, merchantId: merchant.id } });
-    if (!found) await prisma.product.create({ data: { ...p, merchantId: merchant.id } });
+    if (found) {
+      createdProducts.push(found);
+    } else {
+      const created = await prisma.product.create({ data: { ...p, merchantId: merchant.id } });
+      createdProducts.push(created);
+    }
   }
 
-  console.log('Seeded:', { admin: admin.email, merchant: merchant.businessName });
+  // ── Delivered orders (for review testing) ──────────────────────────────
+
+  const order1 = await prisma.order.upsert({
+    where: { id: 'seed-order-1' },
+    update: {},
+    create: {
+      id: 'seed-order-1',
+      customerId: customer.id,
+      merchantId: merchant.id,
+      status: 'delivered',
+      deliveryAddress: '500 S Grand Ave, Los Angeles, CA',
+      subtotal: 13000,
+      tax: 1235,
+      deliveryFee: 500,
+      total: 14735,
+      items: {
+        create: [
+          { productId: createdProducts[0].id, quantity: 1, weightLabel: '7g', priceAtPurchase: 8500 },
+          { productId: createdProducts[5].id, quantity: 1, weightLabel: '30ml', priceAtPurchase: 8500 },
+        ],
+      },
+    },
+  });
+
+  const order2 = await prisma.order.upsert({
+    where: { id: 'seed-order-2' },
+    update: {},
+    create: {
+      id: 'seed-order-2',
+      customerId: customer.id,
+      merchantId: merchant.id,
+      status: 'delivered',
+      deliveryAddress: '500 S Grand Ave, Los Angeles, CA',
+      subtotal: 4500,
+      tax: 428,
+      deliveryFee: 500,
+      total: 5428,
+      items: {
+        create: [
+          { productId: createdProducts[2].id, quantity: 1, weightLabel: '3.5g', priceAtPurchase: 4500 },
+        ],
+      },
+    },
+  });
+
+  // ── Sample reviews ─────────────────────────────────────────────────────
+
+  const order1Items = await prisma.orderItem.findMany({ where: { orderId: 'seed-order-1' } });
+  const blueDreamItem = order1Items.find((i) => i.productId === createdProducts[0].id);
+
+  if (blueDreamItem) {
+    await prisma.review.upsert({
+      where: { orderItemId: blueDreamItem.id },
+      update: {},
+      create: {
+        productId: createdProducts[0].id,
+        customerId: customer.id,
+        orderItemId: blueDreamItem.id,
+        rating: 5,
+        comment: 'Absolutely love this strain! Perfect for daytime use. The berry notes are incredible.',
+      },
+    });
+  }
+
+  // ── Favorites ──────────────────────────────────────────────────────────
+
+  await prisma.favorite.upsert({
+    where: { userId_productId: { userId: customer.id, productId: createdProducts[0].id } },
+    update: {},
+    create: { userId: customer.id, productId: createdProducts[0].id },
+  });
+  await prisma.favorite.upsert({
+    where: { userId_productId: { userId: customer.id, productId: createdProducts[2].id } },
+    update: {},
+    create: { userId: customer.id, productId: createdProducts[2].id },
+  });
+
+  // ── Loyalty account ────────────────────────────────────────────────────
+
+  const loyaltyAccount = await prisma.loyaltyAccount.upsert({
+    where: { userId: customer.id },
+    update: {},
+    create: { userId: customer.id, points: 200, tier: 'bronze' },
+  });
+
+  await prisma.loyaltyTransaction.upsert({
+    where: { id: 'seed-lt-1' },
+    update: {},
+    create: {
+      id: 'seed-lt-1',
+      accountId: loyaltyAccount.id,
+      orderId: 'seed-order-1',
+      points: 147,
+      reason: 'order_earned',
+    },
+  });
+  await prisma.loyaltyTransaction.upsert({
+    where: { id: 'seed-lt-2' },
+    update: {},
+    create: {
+      id: 'seed-lt-2',
+      accountId: loyaltyAccount.id,
+      orderId: 'seed-order-2',
+      points: 54,
+      reason: 'order_earned',
+    },
+  });
+
+  console.log('Seeded:', {
+    admin: admin.email,
+    merchant: merchant.businessName,
+    customer: customer.email,
+    products: createdProducts.length,
+    orders: 2,
+    reviews: 1,
+    favorites: 2,
+    loyaltyPoints: loyaltyAccount.points,
+  });
 }
 
 main()
