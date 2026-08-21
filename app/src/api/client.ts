@@ -217,4 +217,19 @@ export const api = {
     if (useMock) return mockRewards;
     return request<Reward[]>('/loyalty/rewards');
   },
+
+  // ── Push Notifications ─────────────────────────────────
+
+  async registerPushToken(token: string, platform: 'ios' | 'android' | 'web'): Promise<void> {
+    if (useMock) return;
+    await request('/push-tokens', {
+      method: 'POST',
+      body: JSON.stringify({ token, platform }),
+    });
+  },
+
+  async unregisterPushToken(): Promise<void> {
+    if (useMock) return;
+    await request('/push-tokens', { method: 'DELETE' });
+  },
 };

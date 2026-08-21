@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma, requireAuth, requireRole } from '../auth';
 import { awardOrderPoints } from './loyalty';
+import { notifyOrderStatusChange, notifyNewOrder } from '../notifications';
 
 export const ordersRouter = Router();
 
@@ -87,6 +88,10 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
     },
     include: { items: true },
   });
+
+  // Notify merchant of new order (fire-and-forget)
+  notifyNewOrder(merchant.userId, order.id, req.user!.id, order.total).catch(() => {});
+
   res.status(201).json(order);
 });
 
@@ -120,6 +125,8 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
     await awardOrderPoints(order.id, order.customerId, order.total);
   }
 
-  // TODO: send Expo push notification to the customer on each transition.
+  // Send push notification to customer (fire-and-forget)
+  notifyOrderStatusChange(order.id, order.customerId, status, merchant.businessName).catch(() => {});
+
   res.json(updated);
 });

@@ -45,6 +45,7 @@ export async function setupTestData() {
   const password = await bcrypt.hash('password123', 10);
 
   // Clean slate
+  await prisma.pushToken.deleteMany();
   await prisma.loyaltyTransaction.deleteMany();
   await prisma.loyaltyAccount.deleteMany();
   await prisma.review.deleteMany();
@@ -164,6 +165,7 @@ export async function setupTestData() {
 }
 
 export async function cleanupTestData() {
+  await prisma.pushToken.deleteMany();
   await prisma.loyaltyTransaction.deleteMany();
   await prisma.loyaltyAccount.deleteMany();
   await prisma.review.deleteMany();

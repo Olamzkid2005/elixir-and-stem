@@ -45,6 +45,7 @@ model User {
   favorites        Favorite[]
   reviews          Review[]
   loyaltyAccount   LoyaltyAccount?
+  pushTokens       PushToken[]
 }
 
 model Merchant {
@@ -169,4 +170,13 @@ model LoyaltyTransaction {
   points    Int // positive = earned, negative = redeemed
   reason    String // "order_earned" | "redeemed_reward" | "signup_bonus"
   createdAt DateTime        @default(now())
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  platform  String   // "ios" | "android"
+  createdAt DateTime @default(now())
 }
