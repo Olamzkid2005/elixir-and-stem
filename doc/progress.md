@@ -135,12 +135,27 @@ cd server && npm test       # 92 tests across 10 suites
 | delivery.test.ts | 11 |
 | tax.test.ts | 15 |
 
+## Cannabis Compliance Constraints
+
+| Component | Provider | Status |
+|-----------|----------|--------|
+| SMS/OTP | ~~Twilio/Vonage~~ ❌ | Cannabis-blocked by carriers |
+| SMS/OTP | Alpine IQ or Spring Big | ✅ Cannabis-compliant |
+| Payments | ~~Stripe/Adyen~~ ❌ | Explicitly prohibits cannabis |
+| Payments | Aeropay or Dutchie Pay | ✅ Cannabis-compliant |
+| Push Notifications | Expo Push (FCM + APNs) | ✅ No carrier restrictions |
+| Maps | Google Maps Platform | ✅ $200/mo free tier |
+| Auth | JWT + bcrypt (current) | ✅ Works fine |
+| Auth | Apple/Google Sign-In | Phase 3 — reduce friction |
+| Real-time | Socket.io (WebSockets) | Phase 3 — live rider tracking |
+
 ## Known gaps
 
-- **Product images** — `imageColor` placeholder used; real photos need S3 integration
-- **Maps** — Browse screen placeholder; needs `react-native-maps` dev build
-- **Payments** — intentionally out of scope (pay-on-delivery only)
-- **Frontend tests** — no React Native Testing Library tests yet
+- **Maps** — Browse screen placeholder; needs `react-native-maps` dev build + Google Maps API key
+- **Payments** — pay-on-delivery only for MVP; add Aeropay/Dutchie in Phase 3
+- **Real-time tracking** — Socket.io for live rider location (Phase 3)
+- **Social login** — Apple/Google Sign-In (Phase 3)
+- **Frontend tests** — blocked by Expo SDK 54 reanimated plugin in Jest
 
 ## Recent changes / gotchas
 
