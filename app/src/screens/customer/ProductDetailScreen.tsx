@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
@@ -9,20 +9,30 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { QuantityStepper } from '@/components/ui/QuantityStepper';
 import { ProductImage } from '@/components/ProductImage';
 import { AppHeader } from '@/components/AppHeader';
-import { formatPrice, type WeightOption } from '@/api/types';
+import { formatPrice, type WeightOption, type Review } from '@/api/types';
 import { useCart } from '@/store/cart';
+import { useFavorites } from '@/store/favorites';
+import { api } from '@/api/client';
 import { cn } from '@/lib/utils';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
-/** Product Detail — hero, strain stats, terpenes, effects, weight tiers, add to cart. */
+/** Product Detail — hero, strain stats, terpenes, effects, weight tiers, favorites, reviews. */
 export function ProductDetailScreen({ route, navigation }: Props) {
   const { product } = route.params;
   const [weight, setWeight] = useState<WeightOption>(product.weightOptions[0]);
   const [quantity, setQuantity] = useState(1);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const add = useCart((s) => s.add);
   const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
+  const { toggle, isFavorite, refresh: refreshFavorites } = useFavorites();
+  const [showReviews, setShowReviews] = useState(false);
+
+  useEffect(() => {
+    refreshFavorites();
+    api.listProductReviews(product.id).then(setReviews).catch(() => {});
+  }, [product.id]);
 
   const strain = product.strainType
     ? `${product.strainType.charAt(0).toUpperCase() + product.strainType.slice(1)} ${
@@ -30,13 +40,28 @@ export function ProductDetailScreen({ route, navigation }: Props) {
       }`
     : product.category;
 
+  const favorited = isFavorite(product.id);
+
   return (
     <Screen edges={['top']}>
       <AppHeader back />
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Hero */}
+        {/* Hero with favorites toggle */}
         <View className="px-4">
-          <ProductImage color={product.imageColor} className="h-72 w-full rounded-2xl" iconSize={72} />
+          <View className="relative">
+            <ProductImage color={product.imageColor} className="h-72 w-full rounded-2xl" iconSize={72} />
+            <Pressable
+              onPress={() => toggle(product.id)}
+              hitSlop={8}
+              className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-surface/80"
+            >
+              <Icon
+                name={favorited ? 'favorite' : 'favorite_border'}
+                size={22}
+                color={favorited ? '#ba1a1a' : '#1b1c19'}
+              />
+            </Pressable>
+          </View>
         </View>
 
         <View className="px-4 pt-5">
@@ -145,6 +170,61 @@ export function ProductDetailScreen({ route, navigation }: Props) {
               max={Math.min(product.stock, 99)}
             />
           </View>
+
+          {/* Reviews section */}
+          <Pressable
+            onPress={() => setShowReviews(!showReviews)}
+            className="flex-row items-center justify-between rounded-2xl bg-surface-container-lowest p-4"
+          >
+            <View className="flex-row items-center gap-2">
+              <Icon name="rate_review" size={20} color="#4d644b" />
+              <Text className="font-body-semibold text-base text-on-surface">
+                Reviews ({reviews.length})
+              </Text>
+            </View>
+            <Icon
+              name={showReviews ? 'expand_less' : 'expand_more'}
+              size={22}
+              color="#737973"
+            />
+          </Pressable>
+
+          {showReviews && (
+            <View className="mt-3 gap-3 pb-4">
+              {reviews.length === 0 && (
+                <Text className="py-4 text-center font-body text-sm text-on-surface-variant">
+                  No reviews yet — be the first!
+                </Text>
+              )}
+              {reviews.map((review) => (
+                <View key={review.id} className="rounded-2xl bg-surface-container-lowest p-4">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Icon
+                          key={star}
+                          name={star <= review.rating ? 'star' : 'star_border'}
+                          size={14}
+                          color={star <= review.rating ? '#e9c176' : '#c3c8c1'}
+                        />
+                      ))}
+                    </View>
+                    <Text className="font-body text-xs text-on-surface-variant">
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  {review.comment && (
+                    <Text className="mt-2 font-body text-sm text-on-surface leading-5">
+                      {review.comment}
+                    </Text>
+                  )}
+                  <Text className="mt-2 font-body text-xs text-on-surface-variant">
+                    Verified purchase
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
 

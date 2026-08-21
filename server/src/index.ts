@@ -6,6 +6,9 @@ import { merchantsRouter } from './routes/merchants';
 import { productsRouter } from './routes/products';
 import { ordersRouter } from './routes/orders';
 import { adminRouter } from './routes/admin';
+import { favoritesRouter } from './routes/favorites';
+import { reviewsRouter } from './routes/reviews';
+import { loyaltyRouter } from './routes/loyalty';
 
 const app = express();
 app.use(cors());
@@ -18,6 +21,9 @@ app.use('/merchants', merchantsRouter);
 app.use('/products', productsRouter);
 app.use('/orders', ordersRouter);
 app.use('/admin', adminRouter);
+app.use('/favorites', favoritesRouter);
+app.use('/reviews', reviewsRouter);
+app.use('/loyalty', loyaltyRouter);
 
 // Central error handler — routes throw { status, message } style errors.
 app.use(

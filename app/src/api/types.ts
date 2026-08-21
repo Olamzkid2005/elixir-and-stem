@@ -16,6 +16,8 @@ export type OrderStatus =
   | 'delivered'
   | 'rejected';
 
+export type LoyaltyTier = 'bronze' | 'silver' | 'gold';
+
 export interface User {
   id: string;
   email: string;
@@ -71,6 +73,7 @@ export interface CartItem {
 }
 
 export interface OrderItem {
+  id?: string; // needed for review linking
   productId: string;
   name: string;
   weightLabel: string;
@@ -99,6 +102,32 @@ export interface Order {
   timeline: { status: OrderStatus; label: string; detail?: string; at?: string }[];
 }
 
+export interface Review {
+  id: string;
+  productId: string;
+  customerId: string;
+  customerEmail?: string;
+  orderItemId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface LoyaltyTransaction {
+  id: string;
+  accountId: string;
+  orderId?: string;
+  points: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface LoyaltyAccount {
+  points: number;
+  tier: LoyaltyTier;
+  transactions: LoyaltyTransaction[];
+}
+
 export interface Reward {
   id: string;
   title: string;
@@ -108,12 +137,7 @@ export interface Reward {
 }
 
 export const CATEGORY_LIST: Category[] = [
-  'Flower',
-  'Edibles',
-  'Vapes',
-  'Concentrates',
-  'Tinctures',
-  'Topicals',
+  'Flower', 'Edibles', 'Vapes', 'Concentrates', 'Tinctures', 'Topicals',
 ];
 
 export function formatPrice(cents: number): string {

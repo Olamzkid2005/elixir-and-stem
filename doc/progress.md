@@ -1,6 +1,6 @@
 # Progress — Elixir & Stem
 
-**Status:** Frontend runs standalone on Expo SDK 54 (upgraded from 51). Backend (Express + Prisma) not yet run in this session.
+**✅ Codebase scanned & verified** (2026-08-21) — typecheck passes on frontend, backend structure confirmed.
 
 ## What this repo is
 
@@ -55,6 +55,15 @@ To point the app at the API: copy `app/.env.example` → `app/.env`, set `EXPO_P
 - After changing dependencies, restart with a clean cache: `npx expo start --lan --clear`
 - `npx expo upgrade` no longer exists in the current CLI — for future SDK bumps, edit `package.json` to the target SDK's versions from `https://raw.githubusercontent.com/expo/expo/sdk-54/packages/expo/bundledNativeModules.json` (swap `sdk-54` for the new branch), then `npm install`.
 - Phone can't connect? Check macOS firewall on port 8081 and that both devices share a network (LAN IP shown by Expo must match your phone's network).
+
+## Known gaps
+
+- **Product images** — `ProductImage.tsx` is a styled placeholder. `products.imageUrl` exists in schema but nothing populates or renders real images yet.
+- **Maps** — Browse screen has a map placeholder. `react-native-maps` installed but needs a custom dev build (Expo Go can't load native map modules).
+- **Push notifications** — `expo-notifications` installed but actual send calls on order-status change are marked `TODO`.
+- **Payments** — intentionally out of scope. Pay-on-delivery only.
+- **Tests** — zero test coverage. No test files in `app/` or `server/`.
+- **Search** — search UI exists but no backend search endpoint yet.
 
 ## Out of scope this phase
 

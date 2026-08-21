@@ -13,6 +13,7 @@ const materialMap = {
   shopping_bag: 'shopping-bag',
   person: 'person-outline',
   star: 'star',
+  star_border: 'star-border',
   add: 'add',
   remove: 'remove',
   add_circle: 'add-circle-outline',
@@ -50,6 +51,19 @@ const materialMap = {
   edit: 'edit',
   delete: 'delete-outline',
   pending: 'pending-actions',
+  // Tier 1 feature icons
+  favorite: 'favorite',
+  favorite_border: 'favorite-border',
+  replay: 'replay',
+  rate_review: 'rate-review',
+  expand_less: 'expand-less',
+  expand_more: 'expand-more',
+  card_giftcard: 'card-giftcard',
+  workspace_premium: 'workspace-premium',
+  emoji_events: 'emoji-events',
+  radio_button_unchecked: 'radio-button-unchecked',
+  today: 'today',
+  savings: 'savings',
 } as const;
 
 const communityMap = {

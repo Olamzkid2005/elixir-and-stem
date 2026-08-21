@@ -12,6 +12,9 @@ import { ProductDetailScreen } from '@/screens/customer/ProductDetailScreen';
 import { CheckoutScreen } from '@/screens/customer/CheckoutScreen';
 import { OrderTrackingScreen } from '@/screens/customer/OrderTrackingScreen';
 import { ProductFormScreen } from '@/screens/merchant/ProductFormScreen';
+import { FavoritesScreen } from '@/screens/customer/FavoritesScreen';
+import { WriteReviewScreen } from '@/screens/customer/WriteReviewScreen';
+import { RewardsScreen } from '@/screens/customer/RewardsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -39,6 +42,9 @@ export function RootNavigator() {
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
           <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+          <Stack.Screen name="Favorites" component={FavoritesScreen} />
+          <Stack.Screen name="WriteReview" component={WriteReviewScreen} />
+          <Stack.Screen name="Rewards" component={RewardsScreen} />
         </>
       )}
     </Stack.Navigator>

@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
-import { mockMerchants, mockPastOrders, mockProducts, mockRewards } from './mock';
-import type { Merchant, Order, Product, Reward, User } from './types';
+import { mockMerchants, mockPastOrders, mockProducts, mockRewards, mockReviews, mockLoyalty } from './mock';
+import type { Merchant, Order, Product, Reward, Review, LoyaltyAccount, User } from './types';
 
 /**
  * Thin API layer. If EXPO_PUBLIC_API_URL is configured (see app/.env.example),
@@ -149,8 +149,72 @@ export const api = {
     });
   },
 
+  // ── Favorites ──────────────────────────────────────────
+
+  async toggleFavorite(productId: string): Promise<{ favorited: boolean }> {
+    if (useMock) {
+      // Toggle in-memory (won't persist across sessions in mock mode)
+      return { favorited: true };
+    }
+    return request<{ favorited: boolean }>('/favorites', {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
+    });
+  },
+
+  async listFavorites(): Promise<Product[]> {
+    if (useMock) return mockProducts.slice(0, 3); // return first 3 as "favorited"
+    return request<Product[]>('/favorites');
+  },
+
+  async removeFavorite(productId: string) {
+    if (useMock) return { ok: true };
+    return request(`/favorites/${productId}`, { method: 'DELETE' });
+  },
+
+  // ── Reviews ────────────────────────────────────────────
+
+  async listProductReviews(productId: string): Promise<Review[]> {
+    if (useMock) return mockReviews.filter((r) => r.productId === productId);
+    return request<Review[]>(`/reviews/product/${productId}`);
+  },
+
+  async submitReview(orderItemId: string, rating: number, comment?: string): Promise<Review> {
+    if (useMock) {
+      return {
+        id: `rev-${Date.now()}`,
+        productId: 'p1',
+        customerId: 'u-c1',
+        customerEmail: 'julian@example.com',
+        orderItemId,
+        rating,
+        comment,
+        createdAt: new Date().toISOString(),
+      };
+    }
+    return request<Review>('/reviews', {
+      method: 'POST',
+      body: JSON.stringify({ orderItemId, rating, comment }),
+    });
+  },
+
+  // ── Loyalty ────────────────────────────────────────────
+
+  async getLoyaltyAccount(): Promise<LoyaltyAccount> {
+    if (useMock) return mockLoyalty;
+    return request<LoyaltyAccount>('/loyalty/me');
+  },
+
+  async redeemReward(rewardId: string, points: number, discountCents: number) {
+    if (useMock) return { ok: true, remainingPoints: mockLoyalty.points - points };
+    return request('/loyalty/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ rewardId, points, discountCents }),
+    });
+  },
+
   async listRewards(): Promise<Reward[]> {
     if (useMock) return mockRewards;
-    return request<Reward[]>('/rewards');
+    return request<Reward[]>('/loyalty/rewards');
   },
 };

@@ -1,4 +1,4 @@
-import type { Merchant, Order, Product, Reward } from './types';
+import type { Merchant, Order, Product, Reward, Review, LoyaltyAccount } from './types';
 
 /**
  * Bundled seed data so the app runs standalone (no backend required).
@@ -108,8 +108,7 @@ export const mockProducts: Product[] = [
     strainType: 'indica',
     thcPct: 22,
     cbdPct: 1.2,
-    description:
-      'A sweet, earthy profile with notes of ripe fruit and pine. Perfect for evening relaxation.',
+    description: 'A sweet, earthy profile with notes of ripe fruit and pine. Perfect for evening relaxation.',
     terpenes: ['Myrcene', 'Limonene', 'Caryophyllene'],
     effects: [
       { icon: 'spa', label: 'Relaxing' },
@@ -241,27 +240,81 @@ export const mockProducts: Product[] = [
 
 export const mockRewards: Reward[] = [
   {
-    id: 'r1',
+    id: 'free_delivery',
     title: 'Free Delivery',
     subtitle: 'Redeem for 100 pts',
     icon: 'local_shipping',
     points: 100,
   },
   {
-    id: 'r2',
+    id: '10_off_flower',
     title: '10% Off Flower',
     subtitle: 'Redeem for 150 pts',
     icon: 'local_florist',
     points: 150,
   },
   {
-    id: 'r3',
-    title: 'Exclusive Early Access',
-    subtitle: 'Connoisseur Perk',
-    icon: 'verified',
-    points: 0,
+    id: '5_off',
+    title: '$5 Off Next Order',
+    subtitle: 'Redeem for 200 pts',
+    icon: 'savings',
+    points: 200,
   },
 ];
+
+export const mockReviews: Review[] = [
+  {
+    id: 'rev1',
+    productId: 'p1',
+    customerId: 'u-c1',
+    customerEmail: 'julian@example.com',
+    orderItemId: 'oi1',
+    rating: 5,
+    comment: 'Absolutely love this strain! Perfect for daytime use. The berry notes are incredible.',
+    createdAt: '2023-10-26T10:00:00Z',
+  },
+  {
+    id: 'rev2',
+    productId: 'p1',
+    customerId: 'u-c2',
+    customerEmail: 'sarah@example.com',
+    orderItemId: 'oi2',
+    rating: 4,
+    comment: 'Great quality, smooth smoke. Would recommend to anyone looking for a creative boost.',
+    createdAt: '2023-10-20T15:30:00Z',
+  },
+  {
+    id: 'rev3',
+    productId: 'p3',
+    customerId: 'u-c1',
+    customerEmail: 'julian@example.com',
+    orderItemId: 'oi3',
+    rating: 5,
+    comment: 'My go-to for evening relaxation. Sweet and earthy, just as described.',
+    createdAt: '2023-09-14T09:15:00Z',
+  },
+  {
+    id: 'rev4',
+    productId: 'p4',
+    customerId: 'u-c3',
+    customerEmail: 'mike@example.com',
+    orderItemId: 'oi4',
+    rating: 5,
+    comment: 'The vanilla notes are real! Balanced hybrid that hits just right.',
+    createdAt: '2023-10-28T12:00:00Z',
+  },
+];
+
+export const mockLoyalty: LoyaltyAccount = {
+  points: 750,
+  tier: 'silver',
+  transactions: [
+    { id: 'lt1', accountId: 'la1', orderId: 'ES-8842', points: 145, reason: 'order_earned', createdAt: '2023-10-24T14:20:00Z' },
+    { id: 'lt2', accountId: 'la1', orderId: 'ES-8710', points: 85, reason: 'order_earned', createdAt: '2023-09-12T19:05:00Z' },
+    { id: 'lt3', accountId: 'la1', points: 100, reason: 'signup_bonus', createdAt: '2023-08-01T00:00:00Z' },
+    { id: 'lt4', accountId: 'la1', points: -100, reason: 'redeemed_reward', createdAt: '2023-10-01T10:00:00Z' },
+  ],
+};
 
 export const mockPastOrders: Order[] = [
   {
@@ -273,8 +326,8 @@ export const mockPastOrders: Order[] = [
     paymentMethod: 'pay_on_delivery',
     deliveryAddress: '500 S Grand Ave, Los Angeles, CA',
     items: [
-      { productId: 'p1', name: 'Blue Dream', weightLabel: '7g', quantity: 1, priceAtPurchase: 8500 },
-      { productId: 'p7', name: 'Soothe Confections', weightLabel: '20 pack', quantity: 1, priceAtPurchase: 3500 },
+      { id: 'oi1', productId: 'p1', name: 'Blue Dream', weightLabel: '7g', quantity: 1, priceAtPurchase: 8500 },
+      { id: 'oi5', productId: 'p7', name: 'Soothe Confections', weightLabel: '20 pack', quantity: 1, priceAtPurchase: 3500 },
     ],
     subtotal: 12000,
     tax: 1140,
@@ -292,8 +345,8 @@ export const mockPastOrders: Order[] = [
     paymentMethod: 'pay_on_delivery',
     deliveryAddress: '500 S Grand Ave, Los Angeles, CA',
     items: [
-      { productId: 'p3', name: 'Lush Orchard', weightLabel: '3.5g', quantity: 1, priceAtPurchase: 4500 },
-      { productId: 'p6', name: 'Clarity Drops', weightLabel: '30ml', quantity: 1, priceAtPurchase: 8500 },
+      { id: 'oi3', productId: 'p3', name: 'Lush Orchard', weightLabel: '3.5g', quantity: 1, priceAtPurchase: 4500 },
+      { id: 'oi6', productId: 'p6', name: 'Clarity Drops', weightLabel: '30ml', quantity: 1, priceAtPurchase: 8500 },
     ],
     subtotal: 13000,
     tax: 1235,

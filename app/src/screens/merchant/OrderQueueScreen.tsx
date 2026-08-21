@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { AppHeader } from '@/components/AppHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 import { api } from '@/api/client';
+import { cn } from '@/lib/utils';
 import { formatPrice, type Order, type OrderStatus } from '@/api/types';
 
 type QueueOrder = Order & { customerName: string };
@@ -69,6 +71,27 @@ const initialQueue: QueueOrder[] = [
     createdAt: new Date(Date.now() - 1000 * 60 * 48).toISOString(),
     timeline: [],
   },
+  // Scheduled order
+  {
+    id: 'ES-49210',
+    customerId: 'u-c5',
+    customerName: 'L. Kim',
+    merchantId: 'm1',
+    merchantName: 'Elixir & Stem Downtown',
+    status: 'placed',
+    paymentMethod: 'pay_on_delivery',
+    deliveryAddress: '1200 Wilshire Blvd, Los Angeles, CA',
+    scheduledFor: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(), // tomorrow
+    items: [
+      { productId: 'p2', name: 'Granddaddy Purple', weightLabel: '3.5g', quantity: 2, priceAtPurchase: 5000 },
+    ],
+    subtotal: 10000,
+    tax: 950,
+    deliveryFee: 500,
+    total: 11450,
+    createdAt: new Date().toISOString(),
+    timeline: [],
+  },
 ];
 
 const statusLabel: Record<string, string> = {
@@ -87,9 +110,16 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'gold' | 'error'> 
   rejected: 'error',
 };
 
-/** Merchant order queue — accept / reject / advance fulfillment. */
+type QueueTab = 'today' | 'scheduled';
+
+/** Merchant order queue — Today/Scheduled tabs, accept/reject/advance fulfillment. */
 export function OrderQueueScreen() {
   const [queue, setQueue] = useState<QueueOrder[]>(initialQueue);
+  const [tab, setTab] = useState<QueueTab>('today');
+
+  const todayOrders = queue.filter((o) => !o.scheduledFor);
+  const scheduledOrders = queue.filter((o) => !!o.scheduledFor);
+  const visibleOrders = tab === 'today' ? todayOrders : scheduledOrders;
 
   const setStatus = (id: string, status: OrderStatus) => {
     setQueue((q) => q.map((o) => (o.id === id ? { ...o, status } : o)));
@@ -105,16 +135,69 @@ export function OrderQueueScreen() {
           New orders push here in real time once notifications are enabled.
         </Text>
 
+        {/* Today / Scheduled tabs */}
+        <View className="mt-4 flex-row rounded-full bg-surface-container p-1">
+          {(['today', 'scheduled'] as QueueTab[]).map((t) => (
+            <Pressable
+              key={t}
+              onPress={() => setTab(t)}
+              className={cn(
+                'flex-1 flex-row items-center justify-center gap-1.5 rounded-full py-2.5',
+                tab === t && 'bg-surface-container-lowest'
+              )}
+            >
+              <Icon
+                name={t === 'today' ? 'today' : 'calendar_today'}
+                size={16}
+                color={tab === t ? '#061b0e' : '#737973'}
+              />
+              <Text
+                className={cn(
+                  'font-body-semibold text-sm',
+                  tab === t ? 'text-on-surface' : 'text-on-surface-variant'
+                )}
+              >
+                {t === 'today' ? 'Today' : 'Scheduled'}
+              </Text>
+              {t === 'scheduled' && scheduledOrders.length > 0 && (
+                <Badge variant="gold" label={`${scheduledOrders.length}`} className="px-1.5 py-0.5" />
+              )}
+            </Pressable>
+          ))}
+        </View>
+
         <View className="mt-4 pb-8">
-          {queue.map((o) => (
+          {visibleOrders.length === 0 && (
+            <View className="items-center rounded-2xl bg-surface-container-lowest py-12">
+              <Icon name={tab === 'today' ? 'today' : 'calendar_today'} size={40} color="#c3c8c1" />
+              <Text className="mt-3 font-body text-sm text-on-surface-variant">
+                {tab === 'today' ? 'No orders for today' : 'No scheduled orders'}
+              </Text>
+            </View>
+          )}
+
+          {visibleOrders.map((o) => (
             <View key={o.id} className="mb-3 rounded-2xl bg-surface-container-lowest p-4">
               <View className="flex-row items-center justify-between">
                 <Text className="font-body-semibold text-base text-on-surface">#{o.id}</Text>
-                <Badge variant={statusVariant[o.status]} label={statusLabel[o.status]} />
+                <View className="flex-row items-center gap-2">
+                  {o.scheduledFor && (
+                    <Badge variant="gold" label="Scheduled" />
+                  )}
+                  <Badge variant={statusVariant[o.status]} label={statusLabel[o.status]} />
+                </View>
               </View>
               <Text className="mt-1 font-body text-sm text-on-surface-variant">
                 {o.customerName} • {o.deliveryAddress}
               </Text>
+              {o.scheduledFor && (
+                <View className="mt-1 flex-row items-center gap-1">
+                  <Icon name="calendar_today" size={13} color="#737973" />
+                  <Text className="font-body text-xs text-secondary">
+                    {new Date(o.scheduledFor).toLocaleString()}
+                  </Text>
+                </View>
+              )}
               <View className="mt-2 gap-1">
                 {o.items.map((i) => (
                   <Text key={i.productId} className="font-body text-sm text-on-surface">

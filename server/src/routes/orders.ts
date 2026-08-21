@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma, requireAuth, requireRole } from '../auth';
+import { awardOrderPoints } from './loyalty';
 
 export const ordersRouter = Router();
 
@@ -9,8 +10,12 @@ ordersRouter.get('/', requireAuth, async (req, res) => {
   if (req.user!.role === 'merchant') {
     const merchant = await prisma.merchant.findUnique({ where: { userId: req.user!.id } });
     if (!merchant) return res.json([]);
+    const scheduled = req.query.scheduled as string | undefined;
+    const where: any = { merchantId: merchant.id };
+    if (scheduled === 'true') where.scheduledFor = { not: null };
+    else if (scheduled === 'false') where.scheduledFor = null;
     const orders = await prisma.order.findMany({
-      where: { merchantId: merchant.id },
+      where,
       include: { items: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -104,6 +109,17 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
   if (!status || !VALID_TRANSITIONS[order.status]?.includes(status)) {
     return res.status(400).json({ error: `Cannot move order from ${order.status} to ${status}.` });
   }
+
+  const updated = await prisma.order.update({
+    where: { id: order.id },
+    data: { status: status as any },
+  });
+
+  // Award loyalty points when order is delivered
+  if (status === 'delivered') {
+    await awardOrderPoints(order.id, order.customerId, order.total);
+  }
+
   // TODO: send Expo push notification to the customer on each transition.
-  res.json(await prisma.order.update({ where: { id: order.id }, data: { status: status as any } }));
+  res.json(updated);
 });

@@ -1,5 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
-import type { Product } from '@/api/types';
+import type { Product, Order, Review } from '@/api/types';
 
 export type CustomerTabParamList = {
   Home: undefined;
@@ -28,4 +28,7 @@ export type RootStackParamList = {
   Checkout: undefined;
   OrderTracking: { orderId?: string };
   ProductForm: { productId?: string };
+  Favorites: undefined;
+  WriteReview: { orderItemId: string; productName: string; productImageColor?: string };
+  Rewards: undefined;
 };

@@ -40,8 +40,11 @@ model User {
   suspended    Boolean   @default(false)
   createdAt    DateTime  @default(now())
 
-  merchant Merchant?
-  orders   Order[]   @relation("CustomerOrders")
+  merchant         Merchant?
+  orders           Order[]           @relation("CustomerOrders")
+  favorites        Favorite[]
+  reviews          Review[]
+  loyaltyAccount   LoyaltyAccount?
 }
 
 model Merchant {
@@ -58,6 +61,7 @@ model Merchant {
   // Per-state compliance rules can be layered on per-merchant here later
   // (delivery windows, purchase limits, product restrictions) without rewrites.
   stateCode     String?
+  rating        Float?         @default(0) // denormalized avg rating
   createdAt     DateTime       @default(now())
 
   products Product[]
@@ -65,24 +69,28 @@ model Merchant {
 }
 
 model Product {
-  id          String  @id @default(cuid())
-  merchantId  String
-  merchant    Merchant @relation(fields: [merchantId], references: [id])
-  name        String
-  brand       String  @default("")
-  category    String // Flower | Edibles | Vapes | Concentrates | Tinctures | Topicals
-  strainType  String? // sativa | indica | hybrid
-  thcPct      Float?
-  cbdPct      Float?
-  description String  @default("")
-  terpenes    String[] @default([])
-  price       Int // base price in cents (see weightOptions for tiers)
+  id            String   @id @default(cuid())
+  merchantId    String
+  merchant      Merchant @relation(fields: [merchantId], references: [id])
+  name          String
+  brand         String   @default("")
+  category      String // Flower | Edibles | Vapes | Concentrates | Tinctures | Topicals
+  strainType    String? // sativa | indica | hybrid
+  thcPct        Float?
+  cbdPct        Float?
+  description   String   @default("")
+  terpenes      String[] @default([])
+  price         Int // base price in cents (see weightOptions for tiers)
   weightOptions Json  // [{ label: "3.5g", price: 4500 }, ...]
-  stock       Int     @default(0)
-  imageUrl    String?
-  createdAt   DateTime @default(now())
+  stock         Int      @default(0)
+  imageUrl      String?
+  rating        Float?   @default(0) // denormalized avg rating
+  reviewCount   Int      @default(0) // denormalized count
+  createdAt     DateTime @default(now())
 
-  orderItems OrderItem[]
+  orderItems  OrderItem[]
+  favorites   Favorite[]
+  reviews     Review[]
 }
 
 model Order {
@@ -114,4 +122,51 @@ model OrderItem {
   quantity        Int
   weightLabel     String  @default("")
   priceAtPurchase Int // cents
+
+  review Review?
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+  customerId  String
+  customer    User      @relation(fields: [customerId], references: [id])
+  orderItemId String    @unique // one review per purchased line item — enforces verified purchase
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+  rating      Int       // 1-5
+  comment     String?
+  createdAt   DateTime  @default(now())
+}
+
+model LoyaltyAccount {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  points    Int      @default(0)
+  tier      String   @default("bronze") // bronze | silver | gold
+  updatedAt DateTime @updatedAt
+
+  transactions LoyaltyTransaction[]
+}
+
+model LoyaltyTransaction {
+  id        String          @id @default(cuid())
+  accountId String
+  account   LoyaltyAccount  @relation(fields: [accountId], references: [id])
+  orderId   String?
+  points    Int // positive = earned, negative = redeemed
+  reason    String // "order_earned" | "redeemed_reward" | "signup_bonus"
+  createdAt DateTime        @default(now())
 }
