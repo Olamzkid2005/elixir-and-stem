@@ -64,6 +64,8 @@ const materialMap = {
   radio_button_unchecked: 'radio-button-unchecked',
   today: 'today',
   savings: 'savings',
+  admin_panel_settings: 'admin-panel-settings',
+  description: 'description',
 } as const;
 
 const communityMap = {

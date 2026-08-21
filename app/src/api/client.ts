@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { mockMerchants, mockPastOrders, mockProducts, mockRewards, mockReviews, mockLoyalty } from './mock';
-import type { Merchant, Order, Product, Reward, Review, LoyaltyAccount, User } from './types';
+import type { Merchant, Order, Product, Reward, Review, LoyaltyAccount, User, Role } from './types';
 
 /**
  * Thin API layer. If EXPO_PUBLIC_API_URL is configured (see app/.env.example),
@@ -49,7 +49,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const useMock = API_URL.length === 0;
 
 export const api = {
-  async signIn(email: string, password: string, role: 'customer' | 'merchant') {
+  async signIn(email: string, password: string, role: Role) {
     if (useMock) {
       return {
         token: 'mock-token',
@@ -255,5 +255,85 @@ export const api = {
   async sendTestNotification(): Promise<{ ok: boolean; message: string }> {
     if (useMock) return { ok: true, message: 'Test notification sent (mock mode).' };
     return request<{ ok: boolean; message: string }>('/push-tokens/test', { method: 'POST' });
+  },
+
+  // ── File Uploads ────────────────────────────────────────
+
+  async getPresignedUploadUrl(
+    fileName: string,
+    contentType: string,
+    purpose: 'product-image' | 'license-document'
+  ): Promise<{ uploadUrl: string; fileUrl: string; key: string }> {
+    if (useMock) {
+      return { uploadUrl: '', fileUrl: `https://placeholder.com/${fileName}`, key: `mock/${fileName}` };
+    }
+    return request('/upload/presigned-url', {
+      method: 'POST',
+      body: JSON.stringify({ fileName, contentType, purpose }),
+    });
+  },
+
+  /**
+   * Upload a file to S3 via pre-signed URL.
+   * Use with expo-image-picker to get the local file URI.
+   */
+  async uploadFile(
+    localUri: string,
+    fileName: string,
+    contentType: string,
+    purpose: 'product-image' | 'license-document'
+  ): Promise<string> {
+    // Get pre-signed URL
+    const { uploadUrl, fileUrl } = await this.getPresignedUploadUrl(fileName, contentType, purpose);
+    
+    if (!uploadUrl) return fileUrl; // mock mode
+
+    // Read the file and upload directly to S3
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: blob,
+      headers: { 'Content-Type': contentType },
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload file to storage.');
+    }
+
+    return fileUrl;
+  },
+
+  // ── Merchant Profile ────────────────────────────────────
+
+  async updateMerchantProfile(data: {
+    businessName?: string;
+    licenseNumber?: string;
+    licenseDocUrl?: string;
+    address?: string;
+  }): Promise<Merchant> {
+    if (useMock) {
+      return mockMerchants[0];
+    }
+    return request<Merchant>('/merchants/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // ── Admin ────────────────────────────────────────────────
+
+  async adminGetPendingMerchants(): Promise<any[]> {
+    if (useMock) return [];
+    return request<any[]>('/admin/merchants?status=pending');
+  },
+
+  async adminUpdateMerchantStatus(merchantId: string, status: 'approved' | 'rejected'): Promise<any> {
+    if (useMock) return { status };
+    return request(`/admin/merchants/${merchantId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
   },
 };

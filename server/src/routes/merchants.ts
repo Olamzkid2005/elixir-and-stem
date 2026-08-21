@@ -53,3 +53,24 @@ merchantsRouter.post('/', requireAuth, requireRole('merchant'), async (req, res)
   });
   res.status(201).json({ status: merchant.status });
 });
+
+/** PATCH /merchants/me — update own profile (business info, license doc). */
+merchantsRouter.patch('/me', requireAuth, requireRole('merchant'), async (req, res) => {
+  const merchant = await prisma.merchant.findUnique({ where: { userId: req.user!.id } });
+  if (!merchant) return res.status(404).json({ error: 'No merchant profile yet.' });
+
+  const { businessName, licenseNumber, licenseDocUrl, address, lat, lng, stateCode } = req.body;
+  const updated = await prisma.merchant.update({
+    where: { id: merchant.id },
+    data: {
+      ...(businessName && { businessName }),
+      ...(licenseNumber && { licenseNumber }),
+      ...(licenseDocUrl !== undefined && { licenseDocUrl }),
+      ...(address && { address }),
+      ...(lat !== undefined && { lat }),
+      ...(lng !== undefined && { lng }),
+      ...(stateCode && { stateCode }),
+    },
+  });
+  res.json(updated);
+});

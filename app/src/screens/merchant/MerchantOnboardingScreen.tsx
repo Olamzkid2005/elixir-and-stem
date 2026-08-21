@@ -41,12 +41,19 @@ export function MerchantOnboardingScreen({ navigation }: Props) {
   const submit = async () => {
     setLoading(true);
     try {
-      // Uploads licenseDoc to S3 first in production; URL passed here.
+      // Upload license document to S3 if one was selected
+      let licenseDocUrl: string | undefined;
+      if (licenseDoc) {
+        const fileName = licenseDoc.split('/').pop() ?? 'license-doc';
+        const contentType = fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg';
+        licenseDocUrl = await api.uploadFile(licenseDoc, fileName, contentType, 'license-document');
+      }
+
       await api.registerMerchant({
         businessName,
         address,
         licenseNumber,
-        licenseDocUrl: licenseDoc ?? undefined,
+        licenseDocUrl,
       });
       Alert.alert(
         'Application submitted',

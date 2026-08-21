@@ -39,4 +39,5 @@ export type RootStackParamList = {
   Favorites: undefined;
   WriteReview: { orderItemId: string; productName: string; productImageColor?: string; imageUrl?: string | null };
   Rewards: undefined;
+  AdminDashboard: undefined;
 };

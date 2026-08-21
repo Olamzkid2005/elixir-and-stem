@@ -144,6 +144,16 @@ export function DrawerContent(props: any) {
                 navigation.navigate('MerchantTabs');
               }}
             />
+            {user?.role === 'admin' && (
+              <DrawerItem
+                icon="admin_panel_settings"
+                label="Admin Dashboard"
+                onPress={() => {
+                  props.navigation.closeDrawer();
+                  navigation.navigate('AdminDashboard');
+                }}
+              />
+            )}
           </View>
         </>
       )}

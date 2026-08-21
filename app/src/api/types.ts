@@ -1,4 +1,4 @@
-export type Role = 'customer' | 'merchant';
+export type Role = 'customer' | 'merchant' | 'admin';
 export type MerchantStatus = 'pending' | 'approved' | 'rejected';
 export type StrainType = 'sativa' | 'indica' | 'hybrid';
 export type Category =

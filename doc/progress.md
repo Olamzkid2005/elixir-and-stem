@@ -77,6 +77,29 @@ cd server && npm test       # 92 tests across 10 suites
 - Orders include `merchantName` via merchant relation join
 - Prisma migration: `add-display-fields`
 
+### Navigation Drawer ✅
+- Slide-in drawer using `@react-navigation/drawer`
+- Menu button in AppHeader opens the drawer
+- Profile header with user info
+- Navigation links: Home, Browse, Cart, Orders, Profile, Favorites, Rewards
+- Merchant Dashboard link for merchants
+- Admin Dashboard link for admins
+- Sign out button
+
+### Merchant License Upload ✅
+- Pre-signed S3 upload endpoint (`POST /upload/presigned-url`)
+- Frontend `api.uploadFile()` for direct S3 uploads via pre-signed URLs
+- Merchant onboarding uploads license document to S3
+- Admin dashboard shows license document link for review
+- `PATCH /merchants/me` for updating merchant profile
+
+### Admin Dashboard ✅
+- Admin dashboard screen (`/admin`) for reviewing merchant applications
+- Shows pending merchants with business info and license details
+- View license document link
+- Approve/reject merchants
+- Accessible from drawer for admin users
+
 ## Test coverage (92 tests, 10 suites)
 
 | Suite | Tests |

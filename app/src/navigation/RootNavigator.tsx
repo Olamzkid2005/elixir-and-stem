@@ -15,6 +15,7 @@ import { ProductFormScreen } from '@/screens/merchant/ProductFormScreen';
 import { FavoritesScreen } from '@/screens/customer/FavoritesScreen';
 import { WriteReviewScreen } from '@/screens/customer/WriteReviewScreen';
 import { RewardsScreen } from '@/screens/customer/RewardsScreen';
+import { AdminDashboard } from '@/screens/admin/AdminDashboard';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -35,6 +36,7 @@ export function RootNavigator() {
         <>
           <Stack.Screen name="MerchantTabs" component={MerchantTabs} />
           <Stack.Screen name="ProductForm" component={ProductFormScreen} />
+          <Stack.Screen name="AdminDashboard" component={AdminDashboard} />
         </>
       ) : (
         <>
