@@ -36,7 +36,7 @@ const materialMap = {
   stars: 'stars',
   verified: 'verified',
   location_on: 'location-on',
-  map: 'map-outline',
+  map: 'map',
   list: 'format-list-bulleted',
   tune: 'tune',
   inventory: 'inventory-2-outline',
