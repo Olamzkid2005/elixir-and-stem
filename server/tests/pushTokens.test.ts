@@ -169,18 +169,14 @@ describe('Push Token Routes', () => {
     });
 
     it('should reject when no tokens are registered', async () => {
-      // Create a fresh user with no tokens
-      const signupRes = await request(app)
-        .post('/auth/signup')
-        .send({
-          email: 'no-tokens-user@example.com',
-          password: 'testpass123',
-          role: 'customer',
-        });
+      const customer = getCustomer();
+
+      // Ensure no tokens
+      await prisma.pushToken.deleteMany({ where: { userId: customer.id } });
 
       const res = await request(app)
         .post('/push-tokens/test')
-        .set('Authorization', `Bearer ${signupRes.body.token}`);
+        .set('Authorization', `Bearer ${customer.token}`);
 
       expect(res.status).toBe(400);
       expect(res.body.error).toMatch(/No push tokens/);

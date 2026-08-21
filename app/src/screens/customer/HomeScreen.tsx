@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,38 +8,64 @@ import { AppHeader, SectionTitle } from '@/components/AppHeader';
 import { FeaturedCard, ProductRowCard } from '@/components/ProductCards';
 import { Input } from '@/components/ui/Input';
 import { ProductImage } from '@/components/ProductImage';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
+import { api } from '@/api/client';
 import { mockProducts } from '@/api/mock';
-import { formatPrice, CATEGORY_LIST, type Category } from '@/api/types';
+import { formatPrice, CATEGORY_LIST, type Category, type Product } from '@/api/types';
 import { useFavorites } from '@/store/favorites';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** Customer Home — search, category pills, Favorites shelf, Featured Cultivars, Curated Selection. */
+/** Customer Home — debounced search, category pills, Favorites shelf, Featured Cultivars, Curated Selection. */
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>(mockProducts);
+  const [searching, setSearching] = useState(false);
   const { favorites, initialized, refresh: refreshFavorites } = useFavorites();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     refreshFavorites();
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      mockProducts.filter(
+  // Debounced search — hits API when backend is available, falls back to mock filtering
+  const doSearch = useCallback(async (q: string, cat: Category | null) => {
+    setSearching(true);
+    try {
+      const results = await api.searchProducts(q, cat ?? undefined);
+      setProducts(results);
+    } catch {
+      // Fallback to local mock filtering
+      const filtered = mockProducts.filter(
         (p) =>
-          (!category || p.category === category) &&
-          (!query || p.name.toLowerCase().includes(query.toLowerCase()))
-      ),
-    [category, query]
-  );
+          (!cat || p.category === cat) &&
+          (!q ||
+            p.name.toLowerCase().includes(q.toLowerCase()) ||
+            p.brand.toLowerCase().includes(q.toLowerCase()) ||
+            p.description.toLowerCase().includes(q.toLowerCase()))
+      );
+      setProducts(filtered);
+    } finally {
+      setSearching(false);
+    }
+  }, [query, category]);
 
-  const featured = filtered.filter((p) => p.category === 'Flower').slice(0, 4);
-  const curated = filtered.slice(0, 6);
+  // Debounce search on query/category change
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      doSearch(query, category);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [query, category, doSearch]);
+
+  const featured = products.filter((p) => p.category === 'Flower').slice(0, 4);
+  const curated = products.slice(0, 6);
 
   return (
     <Screen>
@@ -72,8 +98,25 @@ export function HomeScreen() {
           )}
         />
 
+        {/* Search results indicator */}
+        {(query || category) && (
+          <View className="flex-row items-center justify-between px-4 pb-2">
+            <Text className="font-body text-sm text-on-surface-variant">
+              {searching ? 'Searching…' : `${products.length} result${products.length === 1 ? '' : 's'}`}
+              {query ? ` for "${query}"` : ''}
+              {category ? ` in ${category}` : ''}
+            </Text>
+            <Pressable
+              onPress={() => { setQuery(''); setCategory(null); }}
+              hitSlop={8}
+            >
+              <Text className="font-body-semibold text-sm text-secondary">Clear</Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* Favorites shelf — only shown if customer has ≥1 favorite */}
-        {initialized && favorites.length > 0 && (
+        {!query && !category && initialized && favorites.length > 0 && (
           <>
             <SectionTitle
               title="Your Favorites"
@@ -117,8 +160,8 @@ export function HomeScreen() {
           </>
         )}
 
-        {/* Featured Cultivars */}
-        {featured.length > 0 && (
+        {/* Featured Cultivars — hidden during search */}
+        {!query && !category && featured.length > 0 && (
           <>
             <SectionTitle title="Featured Cultivars" />
             <FlatList
@@ -137,8 +180,8 @@ export function HomeScreen() {
           </>
         )}
 
-        {/* Curated Selection */}
-        <SectionTitle title="Curated Selection" action="View All" />
+        {/* Curated Selection / Search Results */}
+        <SectionTitle title={query || category ? 'Results' : 'Curated Selection'} action={!query && !category ? 'View All' : undefined} />
         <View className="px-4 pb-8">
           {curated.map((p) => (
             <ProductRowCard
@@ -147,10 +190,13 @@ export function HomeScreen() {
               onPress={() => navigation.navigate('ProductDetail', { product: p })}
             />
           ))}
-          {curated.length === 0 && (
-            <Text className="mt-4 text-center font-body text-sm text-on-surface-variant">
-              Nothing matches your filters yet.
-            </Text>
+          {curated.length === 0 && !searching && (
+            <View className="items-center py-12">
+              <Icon name="search" size={40} color="#c3c8c1" />
+              <Text className="mt-3 font-body text-sm text-on-surface-variant">
+                No products match your search
+              </Text>
+            </View>
           )}
         </View>
       </ScrollView>

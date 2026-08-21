@@ -105,6 +105,28 @@ export const api = {
     return request<Product[]>(merchantId ? `/products?merchantId=${merchantId}` : '/products');
   },
 
+  async searchProducts(query: string, category?: string): Promise<Product[]> {
+    if (useMock) {
+      const q = query.toLowerCase();
+      return mockProducts.filter(
+        (p) =>
+          (!category || p.category === category) &&
+          (!q ||
+            p.name.toLowerCase().includes(q) ||
+            p.brand.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            (p.strainType ?? '').toLowerCase().includes(q) ||
+            p.category.toLowerCase().includes(q) ||
+            p.terpenes.some((t) => t.toLowerCase().includes(q)))
+      );
+    }
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    if (category) params.set('category', category);
+    const qs = params.toString();
+    return request<Product[]>(`/products/search${qs ? `?${qs}` : ''}`);
+  },
+
   async listOrders(): Promise<Order[]> {
     if (useMock) return mockPastOrders;
     return request<Order[]>('/orders');

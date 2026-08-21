@@ -16,6 +16,44 @@ productsRouter.get('/', async (req, res) => {
   res.json(products);
 });
 
+/**
+ * GET /products/search?q=&category=
+ * Full-text search across name, brand, description, terpenes, strainType.
+ * Optional category filter. Returns products from approved merchants only.
+ */
+productsRouter.get('/search', async (req, res) => {
+  const q = (req.query.q as string ?? '').trim();
+  const category = req.query.category as string | undefined;
+
+  // Build where clause
+  const where: any = {
+    merchant: { status: 'approved' },
+  };
+
+  if (category) {
+    where.category = category;
+  }
+
+  if (q) {
+    // PostgreSQL case-insensitive ilike for text fields
+    where.OR = [
+      { name: { contains: q, mode: 'insensitive' } },
+      { brand: { contains: q, mode: 'insensitive' } },
+      { description: { contains: q, mode: 'insensitive' } },
+      { strainType: { contains: q, mode: 'insensitive' } },
+      { category: { contains: q, mode: 'insensitive' } },
+    ];
+  }
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: q ? [{ name: 'asc' }] : [{ createdAt: 'desc' }],
+    take: 50,
+  });
+
+  res.json(products);
+});
+
 const productInput = z.object({
   name: z.string().min(1),
   brand: z.string().default(''),
