@@ -24,19 +24,14 @@ beforeAll(async () => {
 
   const orderId = orderRes.body.id;
 
-  // Advance to delivered to trigger points
-  await request(app)
-    .patch(`/orders/${orderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'confirmed' });
-  await request(app)
-    .patch(`/orders/${orderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'out_for_delivery' });
-  await request(app)
-    .patch(`/orders/${orderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'delivered' });
+  // Advance through full lifecycle to trigger points
+  const statuses = ['confirmed', 'ready_for_pickup', 'rider_assigned', 'picked_up', 'out_for_delivery', 'arrived', 'delivered'];
+  for (const status of statuses) {
+    await request(app)
+      .patch(`/orders/${orderId}/status`)
+      .set('Authorization', `Bearer ${merchant.token}`)
+      .send({ status });
+  }
 });
 
 afterAll(async () => {

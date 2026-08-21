@@ -17,7 +17,11 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'gold' | 'error'> = {
   placed: 'gold',
   confirmed: 'secondary',
+  ready_for_pickup: 'secondary',
+  rider_assigned: 'default',
+  picked_up: 'default',
   out_for_delivery: 'default',
+  arrived: 'gold',
   delivered: 'secondary',
   rejected: 'error',
 };
@@ -25,7 +29,11 @@ const statusVariant: Record<OrderStatus, 'default' | 'secondary' | 'gold' | 'err
 const statusLabel: Record<OrderStatus, string> = {
   placed: 'Placed',
   confirmed: 'Confirmed',
+  ready_for_pickup: 'Preparing',
+  rider_assigned: 'Rider Assigned',
+  picked_up: 'Picked Up',
   out_for_delivery: 'Out for Delivery',
+  arrived: 'Rider Arrived',
   delivered: 'Delivered',
   rejected: 'Rejected',
 };

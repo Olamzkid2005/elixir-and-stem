@@ -10,6 +10,7 @@ import { reviewsRouter } from './routes/reviews';
 import { loyaltyRouter } from './routes/loyalty';
 import { pushTokensRouter } from './routes/pushTokens';
 import { uploadRouter } from './routes/upload';
+import { ridersRouter } from './routes/riders';
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ app.use('/reviews', reviewsRouter);
 app.use('/loyalty', loyaltyRouter);
 app.use('/push-tokens', pushTokensRouter);
 app.use('/upload', uploadRouter);
+app.use('/riders', ridersRouter);
 
 // Central error handler — routes throw { status, message } style errors.
 app.use(

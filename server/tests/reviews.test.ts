@@ -27,22 +27,15 @@ beforeAll(async () => {
   deliveredOrderId = orderRes.body.id;
   deliveredOrderItemId = orderRes.body.items[0].id;
 
-  // Advance order to delivered
+  // Advance through full lifecycle to delivered
   const merchant = getMerchant();
-  await request(app)
-    .patch(`/orders/${deliveredOrderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'confirmed' });
-
-  await request(app)
-    .patch(`/orders/${deliveredOrderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'out_for_delivery' });
-
-  await request(app)
-    .patch(`/orders/${deliveredOrderId}/status`)
-    .set('Authorization', `Bearer ${merchant.token}`)
-    .send({ status: 'delivered' });
+  const statuses = ['confirmed', 'ready_for_pickup', 'rider_assigned', 'picked_up', 'out_for_delivery', 'arrived', 'delivered'];
+  for (const status of statuses) {
+    await request(app)
+      .patch(`/orders/${deliveredOrderId}/status`)
+      .set('Authorization', `Bearer ${merchant.token}`)
+      .send({ status });
+  }
 });
 
 afterAll(async () => {

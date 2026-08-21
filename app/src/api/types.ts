@@ -12,7 +12,11 @@ export type Category =
 export type OrderStatus =
   | 'placed'
   | 'confirmed'
+  | 'ready_for_pickup'
+  | 'rider_assigned'
+  | 'picked_up'
   | 'out_for_delivery'
+  | 'arrived'
   | 'delivered'
   | 'rejected';
 

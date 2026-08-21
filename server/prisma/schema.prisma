@@ -25,7 +25,11 @@ enum MerchantStatus {
 enum OrderStatus {
   placed
   confirmed
+  ready_for_pickup
+  rider_assigned
+  picked_up
   out_for_delivery
+  arrived
   delivered
   rejected
 }
@@ -41,6 +45,7 @@ model User {
   createdAt    DateTime  @default(now())
 
   merchant         Merchant?
+  rider            Rider?
   orders           Order[]           @relation("CustomerOrders")
   favorites        Favorite[]
   reviews          Review[]
@@ -49,16 +54,17 @@ model User {
 }
 
 model Merchant {
-  id            String         @id @default(cuid())
-  userId        String         @unique
-  user          User           @relation(fields: [userId], references: [id])
-  businessName  String
-  licenseNumber String
-  licenseDocUrl String?
-  status        MerchantStatus @default(pending) // manual admin approval only
-  address       String
-  lat           Float
-  lng           Float
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id])
+  businessName    String
+  licenseNumber   String
+  licenseDocUrl   String?
+  bankAccount     String?        // for payouts
+  status          MerchantStatus @default(pending) // manual admin approval only
+  address         String
+  lat             Float
+  lng             Float
   // Per-state compliance rules can be layered on per-merchant here later
   // (delivery windows, purchase limits, product restrictions) without rewrites.
   stateCode       String?
@@ -104,6 +110,8 @@ model Order {
   customer        User        @relation("CustomerOrders", fields: [customerId], references: [id])
   merchantId      String
   merchant        Merchant    @relation(fields: [merchantId], references: [id])
+  riderId         String?
+  rider           Rider?      @relation(fields: [riderId], references: [id])
   status          OrderStatus @default(placed)
   paymentMethod   String      @default("pay_on_delivery")
   deliveryAddress String
@@ -174,6 +182,20 @@ model LoyaltyTransaction {
   points    Int // positive = earned, negative = redeemed
   reason    String // "order_earned" | "redeemed_reward" | "signup_bonus"
   createdAt DateTime        @default(now())
+}
+
+model Rider {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  lat         Float?
+  lng         Float?
+  isOnline    Boolean  @default(false)
+  vehicleType String?  // "car", "motorcycle", "bicycle"
+  rating      Float    @default(5.0)
+  createdAt   DateTime @default(now())
+
+  orders Order[]
 }
 
 model PushToken {

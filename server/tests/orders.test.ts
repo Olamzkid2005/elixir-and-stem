@@ -160,33 +160,62 @@ describe('Orders Routes', () => {
       expect(res.body.status).toBe('confirmed');
     });
 
-    it('should advance order from confirmed to out_for_delivery', async () => {
+    it('should advance through full delivery lifecycle', async () => {
       const merchant = getMerchant();
-      const res = await request(app)
+      const customer = getCustomer();
+
+      // confirmed → ready_for_pickup
+      let res = await request(app)
+        .patch(`/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${merchant.token}`)
+        .send({ status: 'ready_for_pickup' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('ready_for_pickup');
+
+      // ready_for_pickup → rider_assigned
+      res = await request(app)
+        .patch(`/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${merchant.token}`)
+        .send({ status: 'rider_assigned' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('rider_assigned');
+
+      // rider_assigned → picked_up
+      res = await request(app)
+        .patch(`/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${merchant.token}`)
+        .send({ status: 'picked_up' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('picked_up');
+
+      // picked_up → out_for_delivery
+      res = await request(app)
         .patch(`/orders/${orderId}/status`)
         .set('Authorization', `Bearer ${merchant.token}`)
         .send({ status: 'out_for_delivery' });
-
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('out_for_delivery');
-    });
 
-    it('should advance order from out_for_delivery to delivered and award points', async () => {
-      const merchant = getMerchant();
-      const customer = getCustomer();
-      const res = await request(app)
+      // out_for_delivery → arrived
+      res = await request(app)
+        .patch(`/orders/${orderId}/status`)
+        .set('Authorization', `Bearer ${merchant.token}`)
+        .send({ status: 'arrived' });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('arrived');
+
+      // arrived → delivered + loyalty points
+      res = await request(app)
         .patch(`/orders/${orderId}/status`)
         .set('Authorization', `Bearer ${merchant.token}`)
         .send({ status: 'delivered' });
-
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('delivered');
 
-      // Check that loyalty points were awarded
+      // Check loyalty points awarded
       const loyaltyRes = await request(app)
         .get('/loyalty/me')
         .set('Authorization', `Bearer ${customer.token}`);
-
       expect(loyaltyRes.status).toBe(200);
       expect(loyaltyRes.body.points).toBeGreaterThan(0);
     });

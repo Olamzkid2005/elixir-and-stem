@@ -121,10 +121,26 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
 /** PATCH /orders/:id/status — merchant advances the fulfillment state machine. */
 const VALID_TRANSITIONS: Record<string, string[]> = {
   placed: ['confirmed', 'rejected'],
-  confirmed: ['out_for_delivery', 'rejected'],
-  out_for_delivery: ['delivered'],
+  confirmed: ['ready_for_pickup', 'rejected'],
+  ready_for_pickup: ['rider_assigned', 'rejected'],
+  rider_assigned: ['picked_up'],
+  picked_up: ['out_for_delivery'],
+  out_for_delivery: ['arrived'],
+  arrived: ['delivered'],
   delivered: [],
   rejected: [],
+};
+
+// Status labels for notifications
+const STATUS_LABELS: Record<string, string> = {
+  confirmed: 'Order Confirmed',
+  ready_for_pickup: 'Ready for Pickup',
+  rider_assigned: 'Rider Assigned',
+  picked_up: 'Order Picked Up',
+  out_for_delivery: 'Out for Delivery',
+  arrived: 'Rider Has Arrived',
+  delivered: 'Order Delivered',
+  rejected: 'Order Rejected',
 };
 
 ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (req, res) => {
@@ -138,9 +154,23 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
     return res.status(400).json({ error: `Cannot move order from ${order.status} to ${status}.` });
   }
 
+  // When order is ready for pickup, auto-assign nearest rider
+  let riderId = order.riderId;
+  if (status === 'ready_for_pickup' && !riderId) {
+    riderId = await assignNearestRider(merchant.lat, merchant.lng);
+    if (!riderId) {
+      // No riders available — keep in ready_for_pickup, customer will be notified of delay
+      console.log(`[Orders] No riders available for order ${order.id}`);
+    }
+  }
+
   const updated = await prisma.order.update({
     where: { id: order.id },
-    data: { status: status as any },
+    data: {
+      status: status as any,
+      ...(riderId && riderId !== order.riderId ? { riderId } : {}),
+    },
+    include: { rider: { include: { user: { select: { email: true } } } } },
   });
 
   // Award loyalty points when order is delivered
@@ -153,3 +183,30 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
 
   res.json({ ...updated, merchantName: merchant.businessName });
 });
+
+/**
+ * Auto-assign the nearest online rider to an order.
+ * Returns riderId or null if no riders available.
+ */
+async function assignNearestRider(merchantLat: number, merchantLng: number): Promise<string | null> {
+  // Find online riders, sorted by proximity to merchant
+  const onlineRiders = await prisma.rider.findMany({
+    where: { isOnline: true, lat: { not: null }, lng: { not: null } },
+    orderBy: { rating: 'desc' }, // prefer higher-rated riders
+  });
+
+  if (onlineRiders.length === 0) return null;
+
+  // Calculate distance to each rider and sort by proximity
+  const ridersWithDistance = onlineRiders
+    .map((rider) => ({
+      ...rider,
+      distance: calculateDistance(merchantLat, merchantLng, rider.lat!, rider.lng!),
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
+  // Return nearest rider (within 10km)
+  const nearest = ridersWithDistance[0];
+  if (nearest.distance > 10) return null; // too far
+  return nearest.id;
+}

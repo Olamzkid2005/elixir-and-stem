@@ -17,9 +17,13 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const STEPS: { status: OrderStatus; label: string }[] = [
   { status: 'placed', label: 'Order Received' },
-  { status: 'confirmed', label: 'Preparing Order' },
+  { status: 'confirmed', label: 'Confirmed' },
+  { status: 'ready_for_pickup', label: 'Preparing Order' },
+  { status: 'rider_assigned', label: 'Rider Assigned' },
+  { status: 'picked_up', label: 'Picked Up' },
   { status: 'out_for_delivery', label: 'Out for Delivery' },
-  { status: 'delivered', label: 'Arrived' },
+  { status: 'arrived', label: 'Rider Has Arrived' },
+  { status: 'delivered', label: 'Delivered' },
 ];
 
 /** Order Tracking — ETA card, courier card, vertical status timeline, review CTA for delivered. */

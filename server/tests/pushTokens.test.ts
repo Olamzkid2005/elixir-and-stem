@@ -244,7 +244,8 @@ describe('Push Token Routes', () => {
       const orderId = orderRes.body.id;
 
       // Advance through statuses — each should trigger a notification (fire-and-forget)
-      for (const status of ['confirmed', 'out_for_delivery', 'delivered']) {
+      const statuses = ['confirmed', 'ready_for_pickup', 'rider_assigned', 'picked_up', 'out_for_delivery', 'arrived', 'delivered'];
+      for (const status of statuses) {
         const res = await request(app)
           .patch(`/orders/${orderId}/status`)
           .set('Authorization', `Bearer ${merchant.token}`)

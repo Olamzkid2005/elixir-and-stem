@@ -108,6 +108,15 @@ cd server && npm test       # 92 tests across 10 suites
 - Browse screen map placeholder shows Nigerian cities
 - Seed data updated with Nigerian addresses and NAFDAC license numbers
 
+### Delivery Lifecycle (Chowdeck/Glovo pattern) ✅
+- Full order status lifecycle: placed → confirmed → ready_for_pickup → rider_assigned → picked_up → out_for_delivery → arrived → delivered
+- Rider model with location tracking and online status
+- Auto-dispatch: nearest idle rider assignment when order is ready for pickup
+- Push notifications fire on every status transition
+- OrderTrackingScreen shows all 8 steps in timeline
+- Merchant can mark order ready_for_pickup when prepared
+- Bank account field added to Merchant model for payouts
+
 ## Test coverage (92 tests, 10 suites)
 
 | Suite | Tests |
