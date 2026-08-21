@@ -234,7 +234,8 @@ export function CheckoutScreen({ navigation }: Props) {
         <SectionTitle title="Order Summary" className="px-0" />
         <View className="mb-6 gap-2 rounded-2xl bg-surface-container p-4">
           <SummaryRow label="Subtotal" value={formatPrice(subtotal())} />
-          <SummaryRow label="Estimated Tax" value={formatPrice(tax())} />
+          <SummaryRow label="VAT (7.5%)" value={formatPrice(Math.round(subtotal() * 0.075))} />
+          <SummaryRow label="State Levy (2.5%)" value={formatPrice(Math.round(subtotal() * 0.025))} />
           <SummaryRow
             label="Delivery Fee"
             value={usePoints ? 'FREE' : formatPrice(DELIVERY_FEE)}

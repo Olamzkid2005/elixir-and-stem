@@ -40,6 +40,7 @@ export interface Merchant {
   rating: number;
   deliveryEtaMins: [number, number];
   distanceMiles?: number;
+  distanceKm?: number;
 }
 
 export interface WeightOption {
@@ -95,13 +96,21 @@ export interface Order {
   notes?: string;
   scheduledFor?: string; // ISO, when "schedule for later" is chosen
   items: OrderItem[];
-  subtotal: number; // cents
-  tax: number;
-  deliveryFee: number;
-  total: number;
+  subtotal: number; // kobo
+  tax: number; // kobo (VAT + state levy)
+  deliveryFee: number; // kobo (distance-based)
+  total: number; // kobo
   createdAt: string;
   driver?: { name: string; rating: number };
   etaMins?: [number, number];
+  deliveryDistance?: number; // km
+  taxBreakdown?: {
+    vat: number;
+    vatRate: number;
+    stateLevy: number;
+    stateLevyRate: number;
+    stateCode: string;
+  };
   timeline: { status: OrderStatus; label: string; detail?: string; at?: string }[];
 }
 

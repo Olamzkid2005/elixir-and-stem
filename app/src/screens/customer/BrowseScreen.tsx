@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { AppHeader, SectionTitle } from '@/components/AppHeader';
@@ -72,23 +72,58 @@ export function BrowseScreen() {
       </View>
 
       {mode === 'map' ? (
-        <View className="mx-4 mb-3 h-56 overflow-hidden rounded-2xl bg-surface-container">
-          {/* Placeholder map canvas — replace with react-native-maps MapView in a dev build */}
-          <View className="flex-1 items-center justify-center">
-            <Icon name="map" size={40} color="#737973" />
-            <Text className="mt-2 font-body text-sm text-on-surface-variant">
-              Map view renders in a native dev build
+        <View className="mx-4 mb-3 h-64 overflow-hidden rounded-2xl bg-surface-container">
+          {/* Nigeria map placeholder — shows merchant locations in major cities */}
+          <View className="flex-1 items-center justify-center bg-primary/10">
+            {/* Simplified Nigeria outline */}
+            <View style={{ height: 192, width: '100%', position: 'relative' }}>
+              {/* City dots */}
+              {[
+                { name: 'Lagos', x: 0.25, y: 0.7 },
+                { name: 'Abuja', x: 0.5, y: 0.4 },
+                { name: 'Kano', x: 0.55, y: 0.15 },
+                { name: 'Port Harcourt', x: 0.7, y: 0.65 },
+                { name: 'Ibadan', x: 0.3, y: 0.6 },
+              ].map((city) => {
+                const screenWidth = Dimensions.get('window').width - 64; // mx-4 * 2
+                return (
+                  <View
+                    key={city.name}
+                    style={{ left: screenWidth * city.x, top: 192 * city.y, position: 'absolute' }}
+                    className="items-center"
+                  >
+                    <View className="h-3 w-3 rounded-full bg-primary" />
+                    <Text className="mt-0.5 font-body text-[10px] text-on-surface-variant">
+                      {city.name}
+                    </Text>
+                  </View>
+                );
+              })}
+
+              {/* Merchant pins */}
+              {merchants.map((m, i) => {
+                const screenWidth = Dimensions.get('window').width - 64;
+                return (
+                  <View
+                    key={m.id}
+                    style={{
+                      left: screenWidth * (0.25 + i * 0.15),
+                      top: 192 * (0.5 + (i % 2) * 0.2),
+                      position: 'absolute',
+                    }}
+                    className="h-8 w-8 items-center justify-center rounded-full bg-primary shadow-md"
+                  >
+                    <Icon name="storefront" size={14} color="#ffffff" />
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+          <View className="bg-surface-container p-2">
+            <Text className="text-center font-body text-xs text-on-surface-variant">
+              {merchants.length} dispensaries in Nigeria • Full map available in dev build
             </Text>
           </View>
-          {merchants.map((m, i) => (
-            <View
-              key={m.id}
-              style={{ left: 40 + i * 70, top: 40 + (i % 2) * 60 }}
-              className="absolute h-8 w-8 items-center justify-center rounded-full bg-primary"
-            >
-              <Icon name="storefront" size={14} color="#ffffff" />
-            </View>
-          ))}
         </View>
       ) : null}
 

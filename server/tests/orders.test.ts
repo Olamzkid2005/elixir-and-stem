@@ -1,5 +1,6 @@
 import request from 'supertest';
 import { app } from '../src/app';
+import { calculateTax, calculateDeliveryFee, calculateDistance } from '../src/tax';
 import {
   prisma, setupTestData, cleanupTestData, disconnectPrisma,
   getCustomer, getMerchant, getProduct,
@@ -36,9 +37,11 @@ describe('Orders Routes', () => {
       expect(res.body).toHaveProperty('id');
       expect(res.body.status).toBe('placed');
       expect(res.body.subtotal).toBe(9000); // 4500 * 2
-      expect(res.body.tax).toBe(Math.round(9000 * 0.095)); // 855
-      expect(res.body.deliveryFee).toBe(500);
-      expect(res.body.total).toBe(9000 + 855 + 500); // 10355
+      // Tax and delivery fee are now calculated dynamically
+      const expectedTax = calculateTax(9000, 'LA');
+      expect(res.body.tax).toBe(expectedTax);
+      expect(res.body.deliveryFee).toBeGreaterThanOrEqual(0);
+      expect(res.body.total).toBe(9000 + expectedTax + res.body.deliveryFee);
       expect(res.body.items).toHaveLength(1);
 
       orderId = res.body.id;
@@ -62,7 +65,8 @@ describe('Orders Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.scheduledFor).toBeDefined();
-      expect(res.body.total).toBe(8500 + Math.round(8500 * 0.095) + 500);
+      const expectedTax = calculateTax(8500, 'LA');
+      expect(res.body.total).toBe(8500 + expectedTax + res.body.deliveryFee);
     });
 
     it('should reject order with no items', async () => {

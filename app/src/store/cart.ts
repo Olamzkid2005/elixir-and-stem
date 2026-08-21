@@ -4,8 +4,10 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { CartItem, Order, Product, WeightOption } from '@/api/types';
 import { mockProducts } from '@/api/mock';
 
-export const TAX_RATE = 0.095; // placeholder — per-state rules plug in here later
-export const DELIVERY_FEE = 500; // cents
+export const VAT_RATE = 0.075; // Nigerian VAT (7.5%)
+export const DEFAULT_STATE_LEVY = 0.025; // Default state levy (2.5%)
+export const BASE_DELIVERY_FEE = 500; // Minimum delivery fee in kobo
+export const DELIVERY_FEE = BASE_DELIVERY_FEE; // For backwards compatibility in UI
 
 interface CartState {
   items: CartItem[];
@@ -112,7 +114,12 @@ export const useCart = create<CartState>()(
       },
 
       subtotal: () => get().items.reduce((sum, i) => sum + i.weight.price * i.quantity, 0),
-      tax: () => Math.round(get().subtotal() * TAX_RATE),
+      tax: () => {
+        const sub = get().subtotal();
+        const vat = Math.round(sub * VAT_RATE);
+        const levy = Math.round(sub * DEFAULT_STATE_LEVY);
+        return vat + levy;
+      },
       total: () => {
         const s = get();
         return s.subtotal() + s.tax() + (s.items.length ? DELIVERY_FEE : 0);

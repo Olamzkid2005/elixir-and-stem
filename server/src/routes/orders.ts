@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma, requireAuth, requireRole } from '../auth';
 import { awardOrderPoints } from './loyalty';
 import { notifyOrderStatusChange, notifyNewOrder } from '../notifications';
+import { calculateTax, calculateDeliveryFee, calculateDistance } from '../tax';
 
 export const ordersRouter = Router();
 
@@ -81,11 +82,18 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
     const tiers = product.weightOptions as { label: string; price: number }[];
     const tier = tiers.find((t) => t.label === i.weightLabel) ?? { price: product.price };
     subtotal += tier.price * i.quantity;
-    return { productId: product.id, quantity: i.quantity, weightLabel: i.weightLabel, priceAtPurchase: tier.price, imageUrl: product.imageUrl, imageColor: product.imageColor };
+    return { productId: product.id, quantity: i.quantity, weightLabel: i.weightLabel, priceAtPurchase: tier.price };
   });
 
-  const tax = Math.round(subtotal * 0.095);
-  const deliveryFee = 500;
+  // Calculate tax based on merchant's state
+  const tax = calculateTax(subtotal, merchant.stateCode);
+
+  // Calculate delivery fee based on distance
+  // Customer location would come from request in production; for now use merchant coords as fallback
+  const customerLat = req.body.customerLat ?? merchant.lat;
+  const customerLng = req.body.customerLng ?? merchant.lng;
+  const distance = calculateDistance(merchant.lat, merchant.lng, customerLat, customerLng);
+  const deliveryFee = calculateDeliveryFee(distance, subtotal);
 
   const order = await prisma.order.create({
     data: {

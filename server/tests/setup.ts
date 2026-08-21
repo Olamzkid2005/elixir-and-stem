@@ -112,12 +112,12 @@ export async function setupTestData() {
     data: {
       userId: merchantUser.id,
       businessName: 'Test Dispensary',
-      licenseNumber: 'CA-C10-TEST-001',
+      licenseNumber: 'NAFDAC-VR-TEST-001',
       status: 'approved',
-      address: '123 Test St, Los Angeles, CA',
-      lat: 34.0522,
-      lng: -118.2437,
-      stateCode: 'CA',
+      address: '123 Test St, Victoria Island, Lagos',
+      lat: 6.4281,
+      lng: 3.4219,
+      stateCode: 'LA',
     },
   });
   _merchantProfile = {

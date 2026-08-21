@@ -100,6 +100,14 @@ cd server && npm test       # 92 tests across 10 suites
 - Approve/reject merchants
 - Accessible from drawer for admin users
 
+### Nigerian Localization ✅
+- Merchant locations updated to Nigerian cities (Lagos, Abuja)
+- Nigerian state tax levies (LA 5%, AB 2%, etc.)
+- Federal VAT 7.5% applied nationwide
+- Distance-based delivery fee calculation
+- Browse screen map placeholder shows Nigerian cities
+- Seed data updated with Nigerian addresses and NAFDAC license numbers
+
 ## Test coverage (92 tests, 10 suites)
 
 | Suite | Tests |
