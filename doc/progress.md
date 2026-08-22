@@ -149,11 +149,19 @@ cd server && npm test       # 92 tests across 10 suites
 | Auth | Apple/Google Sign-In | Phase 3 — reduce friction |
 | Real-time | Socket.io (WebSockets) | Phase 3 — live rider tracking |
 
+### Google Maps Integration ✅
+- Real Google Maps on Browse screen with merchant markers (lat/lng pins)
+- Tap marker → merchant info card with name, address, rating, ETA
+- User location marker with blue dot
+- Live rider tracking map on OrderTrackingScreen (polling-based)
+- Default region: Lagos, Nigeria
+- Requires Google Maps API key (see setup below)
+
 ## Known gaps
 
-- **Maps** — Browse screen placeholder; needs `react-native-maps` dev build + Google Maps API key
+- **Google Maps API key** — needs a real key set in `app.json` and Google Cloud Console
 - **Payments** — pay-on-delivery only for MVP; add Aeropay/Dutchie in Phase 3
-- **Real-time tracking** — Socket.io for live rider location (Phase 3)
+- **Real-time tracking** — Socket.io upgrade from polling (Phase 3)
 - **Social login** — Apple/Google Sign-In (Phase 3)
 - **Frontend tests** — blocked by Expo SDK 54 reanimated plugin in Jest
 
@@ -165,6 +173,21 @@ cd server && npm test       # 92 tests across 10 suites
 - Server refactored: Express app extracted to `src/app.ts` for testability
 - `useRef` in React 19 requires initial value argument
 
+## Google Maps Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project or select existing
+3. Enable **Maps SDK for Android** and **Maps SDK for iOS**
+4. Create an API key with HTTP referrer restrictions
+5. Add to `app.json`:
+```json
+"extra": { "googleMapsApiKey": "YOUR_KEY" },
+"android": { "config": { "googleMaps": { "apiKey": "YOUR_KEY" } } }
+```
+6. For iOS: add `NSLocationWhenInUseUsageDescription` to Info.plist (already handled by expo-location plugin)
+
+Free tier: $200/month credit (enough for development and early users)
+
 ## Out of scope this phase
 
-Real payments (pay-on-delivery only), SMS/push delivery, multi-language. Product art is a styled placeholder; Browse map placeholder becomes `react-native-maps` in a dev build (Expo Go lacks native map modules).
+Real payments (pay-on-delivery only), SMS/push delivery, multi-language.

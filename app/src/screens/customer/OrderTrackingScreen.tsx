@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
@@ -27,7 +28,15 @@ const STEPS: { status: OrderStatus; label: string }[] = [
   { status: 'delivered', label: 'Delivered' },
 ];
 
-/** Order Tracking — ETA card, courier card, vertical status timeline, review CTA for delivered. */
+/** Default map region — Lagos, Nigeria */
+const DEFAULT_REGION = {
+  latitude: 6.5244,
+  longitude: 3.3792,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
+
+/** Order Tracking — ETA card, live rider map, courier card, vertical status timeline, review CTA. */
 export function OrderTrackingScreen({ route }: Props) {
   const navigation = useNavigation<Nav>();
   const { activeOrder, orders, advanceActiveStatus } = useOrders();
@@ -54,10 +63,20 @@ export function OrderTrackingScreen({ route }: Props) {
   const activeIdx = STEPS.findIndex((s) => s.status === order.status);
   const isLive = order.status !== 'delivered' && order.status !== 'rejected';
   const isDelivered = order.status === 'delivered';
-  
+
   // Poll rider location when order is in transit
-  const shouldTrackRider = isLive && ['rider_assigned', 'picked_up', 'out_for_delivery'].includes(order.status);
+  const shouldTrackRider = isLive && ['rider_assigned', 'picked_up', 'out_for_delivery', 'arrived'].includes(order.status);
   const { rider: liveRider } = useRiderLocation(order.id, (order as any).riderId, shouldTrackRider);
+
+  // Compute map region centered on rider or merchant
+  const mapRegion = liveRider?.lat && liveRider?.lng
+    ? {
+        latitude: liveRider.lat,
+        longitude: liveRider.lng,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }
+    : DEFAULT_REGION;
 
   return (
     <Screen>
@@ -65,6 +84,38 @@ export function OrderTrackingScreen({ route }: Props) {
       <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
         <Headline>Track Your Order</Headline>
         <Text className="mt-1 font-body text-sm text-on-surface-variant">Order #{order.id}</Text>
+
+        {/* Live rider map — shown during transit */}
+        {shouldTrackRider && (
+          <View className="mt-4 overflow-hidden rounded-2xl">
+            <MapView
+              provider={PROVIDER_GOOGLE}
+              style={{ height: 200, width: '100%' }}
+              region={mapRegion}
+              scrollEnabled={false}
+              zoomEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+            >
+              {/* Rider marker */}
+              {liveRider?.lat && liveRider?.lng && (
+                <Marker
+                  coordinate={{ latitude: liveRider.lat, longitude: liveRider.lng }}
+                  title="Rider"
+                >
+                  <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary shadow-md">
+                    <Icon name="local_shipping" size={20} color="#ffffff" />
+                  </View>
+                </Marker>
+              )}
+            </MapView>
+            <View className="bg-surface-container p-2">
+              <Text className="text-center font-body text-xs text-on-surface-variant">
+                {liveRider?.lat ? 'Rider location updating' : 'Waiting for rider GPS…'}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Expected arrival */}
         {order.etaMins && isLive && (
@@ -100,18 +151,18 @@ export function OrderTrackingScreen({ route }: Props) {
                     {(liveRider?.rating ?? order.driver?.rating ?? 5.0).toFixed(1)} Rating
                   </Text>
                   {liveRider?.lat && liveRider?.lng && (
-                    <Text className="font-body text-xs text-primary"> • Live tracking</Text>
+                    <Badge variant="secondary" label="Live" />
                   )}
                 </View>
               </View>
             </View>
             <View className="flex-row gap-2">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-surface-container">
+              <Pressable className="h-10 w-10 items-center justify-center rounded-full bg-surface-container">
                 <Icon name="call" size={20} color="#1b1c19" />
-              </View>
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-surface-container">
+              </Pressable>
+              <Pressable className="h-10 w-10 items-center justify-center rounded-full bg-surface-container">
                 <Icon name="chat" size={20} color="#1b1c19" />
-              </View>
+              </Pressable>
             </View>
           </View>
         )}
@@ -161,9 +212,10 @@ export function OrderTrackingScreen({ route }: Props) {
                     {step.label}
                   </Text>
                   <Text className="font-body text-xs text-on-surface-variant">
-                    {step.status === 'placed' && '2:14 PM'}
-                    {step.status === 'confirmed' && `2:20 PM - ${order.merchantName}`}
-                    {step.status === 'out_for_delivery' && current && 'Driver is approaching your location.'}
+                    {step.status === 'placed' && 'Order placed'}
+                    {step.status === 'confirmed' && `${order.merchantName} accepted`}
+                    {step.status === 'rider_assigned' && current && 'Rider is on the way to the merchant'}
+                    {step.status === 'out_for_delivery' && current && 'Driver is approaching your location'}
                     {step.status === 'delivered' && current && 'Delivered — enjoy!'}
                   </Text>
                 </View>
@@ -187,7 +239,7 @@ export function OrderTrackingScreen({ route }: Props) {
                 <View className="flex-1">
                   <Text className="font-body-semibold text-base text-on-surface">{item.name}</Text>
                   <Text className="font-body text-xs text-on-surface-variant">
-                    {item.weightLabel} • {formatPrice(item.priceAtPurchase)}
+                    {item.weightLabel} · {formatPrice(item.priceAtPurchase)}
                   </Text>
                 </View>
                 <Pressable
@@ -202,9 +254,7 @@ export function OrderTrackingScreen({ route }: Props) {
                   className="flex-row items-center gap-1.5 rounded-full bg-secondary-container px-3 py-2"
                 >
                   <Icon name="rate_review" size={16} color="#4d644b" />
-                  <Text className="font-body-semibold text-xs text-on-secondary-container">
-                    Review
-                  </Text>
+                  <Text className="font-body-semibold text-xs text-on-secondary-container">Review</Text>
                 </Pressable>
               </View>
             ))}

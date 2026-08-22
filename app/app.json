@@ -15,9 +15,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.elixirandstem.app"
     },
-    "android": {
-      "package": "com.elixirandstem.app"
-    },
     "plugins": [
       [
         "expo-location",
@@ -33,7 +30,24 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications"
-    ]
+      "expo-notifications",
+      [
+        "react-native-maps",
+        {
+          "locationWhenInUsePermission": "Allow Elixir & Stem to show dispensary locations and rider tracking on the map."
+        }
+      ]
+    ],
+    "extra": {
+      "googleMapsApiKey": ""
+    },
+    "android": {
+      "package": "com.elixirandstem.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": ""
+        }
+      }
+    }
   }
 }

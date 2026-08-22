@@ -1,42 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { Dimensions, Pressable, Text, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Screen, Headline } from '@/components/ui/Screen';
-import { AppHeader, SectionTitle } from '@/components/AppHeader';
+import { AppHeader } from '@/components/AppHeader';
 import { Input } from '@/components/ui/Input';
-import { Chip } from '@/components/ui/Chip';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { Badge } from '@/components/ui/Badge';
 import { mockMerchants } from '@/api/mock';
 import type { Merchant } from '@/api/types';
 import { cn } from '@/lib/utils';
 
+/** Default map region — Lagos, Nigeria */
+const LAGOS_REGION = {
+  latitude: 6.5244,
+  longitude: 3.3792,
+  latitudeDelta: 0.15,
+  longitudeDelta: 0.15,
+};
+
 /**
- * Browse — "Find dispensaries near me" with map/list toggle.
- * Map tiles require react-native-maps native build; in Expo Go we render a
- * styled placeholder canvas with dispensary pins.
+ * Browse — "Find dispensaries near me" with real Google Maps + list view.
  */
 export function BrowseScreen() {
   const [mode, setMode] = useState<'list' | 'map'>('list');
-  const [zip, setZip] = useState('');
   const [merchants] = useState<Merchant[]>(mockMerchants);
   const [locating, setLocating] = useState(false);
-  const [locationMsg, setLocationMsg] = useState('');
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [mapRegion, setMapRegion] = useState(LAGOS_REGION);
+  const [selectedMerchant, setSelectedMerchant] = useState<Merchant | null>(null);
 
   const locate = async () => {
     setLocating(true);
-    setLocationMsg('');
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationMsg('Location permission denied — enter a ZIP instead.');
-        return;
+      if (status === 'granted') {
+        const loc = await Location.getCurrentPositionAsync({});
+        const pos = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+        setUserLocation(pos);
+        setMapRegion({ ...pos, latitudeDelta: 0.1, longitudeDelta: 0.1 });
       }
-      await Location.getCurrentPositionAsync({});
-      setLocationMsg('Showing dispensaries near you.');
     } catch {
-      setLocationMsg('Could not fetch location — enter a ZIP instead.');
+      // Keep default Lagos region
     } finally {
       setLocating(false);
     }
@@ -61,95 +67,102 @@ export function BrowseScreen() {
                 mode === m && 'bg-surface-container-lowest'
               )}
             >
-              <Icon
-                name={m === 'list' ? 'list' : 'map'}
-                size={18}
-                color={mode === m ? '#061b0e' : '#737973'}
-              />
+              <Icon name={m === 'list' ? 'list' : 'map'} size={18} color={mode === m ? '#061b0e' : '#737973'} />
             </Pressable>
           ))}
         </View>
       </View>
 
-      {mode === 'map' ? (
-        <View className="mx-4 mb-3 h-64 overflow-hidden rounded-2xl bg-surface-container">
-          {/* Nigeria map placeholder — shows merchant locations in major cities */}
-          <View className="flex-1 items-center justify-center bg-primary/10">
-            {/* Simplified Nigeria outline */}
-            <View style={{ height: 192, width: '100%', position: 'relative' }}>
-              {/* City dots */}
-              {[
-                { name: 'Lagos', x: 0.25, y: 0.7 },
-                { name: 'Abuja', x: 0.5, y: 0.4 },
-                { name: 'Kano', x: 0.55, y: 0.15 },
-                { name: 'Port Harcourt', x: 0.7, y: 0.65 },
-                { name: 'Ibadan', x: 0.3, y: 0.6 },
-              ].map((city) => {
-                const screenWidth = Dimensions.get('window').width - 64; // mx-4 * 2
-                return (
-                  <View
-                    key={city.name}
-                    style={{ left: screenWidth * city.x, top: 192 * city.y, position: 'absolute' }}
-                    className="items-center"
-                  >
-                    <View className="h-3 w-3 rounded-full bg-primary" />
-                    <Text className="mt-0.5 font-body text-[10px] text-on-surface-variant">
-                      {city.name}
-                    </Text>
-                  </View>
-                );
-              })}
+      {/* Real Google Map */}
+      {mode === 'map' && (
+        <View className="mx-4 mb-3 overflow-hidden rounded-2xl">
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={{ height: 260, width: '100%' }}
+            region={mapRegion}
+            onRegionChangeComplete={setMapRegion}
+            showsUserLocation={!!userLocation}
+            showsMyLocationButton={false}
+          >
+            {/* User location marker */}
+            {userLocation && (
+              <Marker coordinate={userLocation} title="You are here">
+                <View className="h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-blue-500 shadow-md">
+                  <Icon name="location_on" size={16} color="#ffffff" />
+                </View>
+              </Marker>
+            )}
 
-              {/* Merchant pins */}
-              {merchants.map((m, i) => {
-                const screenWidth = Dimensions.get('window').width - 64;
-                return (
-                  <View
-                    key={m.id}
-                    style={{
-                      left: screenWidth * (0.25 + i * 0.15),
-                      top: 192 * (0.5 + (i % 2) * 0.2),
-                      position: 'absolute',
-                    }}
-                    className="h-8 w-8 items-center justify-center rounded-full bg-primary shadow-md"
-                  >
-                    <Icon name="storefront" size={14} color="#ffffff" />
+            {/* Merchant markers */}
+            {merchants
+              .filter((m) => m.lat && m.lng)
+              .map((m) => (
+                <Marker
+                  key={m.id}
+                  coordinate={{ latitude: m.lat, longitude: m.lng }}
+                  onPress={() => setSelectedMerchant(m)}
+                >
+                  <View className="h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary shadow-md">
+                    <Icon name="storefront" size={16} color="#ffffff" />
                   </View>
-                );
-              })}
+                </Marker>
+              ))}
+          </MapView>
+
+          {/* Merchant info card on marker tap */}
+          {selectedMerchant && (
+            <View className="absolute bottom-0 left-0 right-0 border-t border-outline-variant bg-surface p-4 shadow-lg">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1">
+                  <Text className="font-headline text-lg text-on-surface">
+                    {selectedMerchant.businessName}
+                  </Text>
+                  <Text className="mt-0.5 font-body text-sm text-on-surface-variant">
+                    {selectedMerchant.address}
+                  </Text>
+                  <View className="mt-2 flex-row items-center gap-3">
+                    <View className="flex-row items-center gap-1">
+                      <Icon name="star" size={14} color="#e9c176" />
+                      <Text className="font-body-semibold text-xs text-on-surface">
+                        {selectedMerchant.rating}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Icon name="schedule" size={14} color="#737973" />
+                      <Text className="font-body text-xs text-on-surface-variant">
+                        {selectedMerchant.deliveryEtaMins[0]}–{selectedMerchant.deliveryEtaMins[1]} min
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                <Pressable
+                  onPress={() => setSelectedMerchant(null)}
+                  hitSlop={8}
+                  className="h-8 w-8 items-center justify-center rounded-full bg-surface-container"
+                >
+                  <Icon name="close" size={18} color="#737973" />
+                </Pressable>
+              </View>
+              <Button label="View Menu" icon="storefront" size="sm" className="mt-3" onPress={() => setSelectedMerchant(null)} />
             </View>
-          </View>
+          )}
+
           <View className="bg-surface-container p-2">
             <Text className="text-center font-body text-xs text-on-surface-variant">
-              {merchants.length} dispensaries in Nigeria • Full map available in dev build
+              {merchants.length} dispensaries · Tap markers for details
             </Text>
           </View>
         </View>
-      ) : null}
+      )}
 
-      <View className="px-4 pb-2">
-        <Input
-          icon="location_on"
-          placeholder="Enter ZIP code"
-          keyboardType="number-pad"
-          value={zip}
-          onChangeText={setZip}
-          className="gap-0"
-        />
-        {locationMsg ? (
-          <Text className="mt-1 px-1 font-body text-xs text-on-surface-variant">{locationMsg}</Text>
-        ) : null}
-      </View>
-
-      <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+      {/* Merchant list */}
+      <View className="flex-1 px-4">
         {merchants.map((m) => (
           <View key={m.id} className="mb-3 rounded-2xl bg-surface-container-lowest p-4">
             <View className="flex-row items-start justify-between">
               <View className="flex-1">
                 <Text className="font-headline text-lg text-on-surface">{m.businessName}</Text>
-                <Text className="mt-0.5 font-body text-sm text-on-surface-variant">
-                  {m.address}
-                </Text>
+                <Text className="mt-0.5 font-body text-sm text-on-surface-variant">{m.address}</Text>
                 <View className="mt-2 flex-row items-center gap-3">
                   <View className="flex-row items-center gap-1">
                     <Icon name="star" size={14} color="#e9c176" />
@@ -161,27 +174,17 @@ export function BrowseScreen() {
                       {m.deliveryEtaMins[0]}–{m.deliveryEtaMins[1]} min
                     </Text>
                   </View>
-                  <Text className="font-body text-xs text-on-surface-variant">
-                    {m.distanceMiles} mi
-                  </Text>
                 </View>
               </View>
-              <Badge
-                variant={m.status === 'approved' ? 'secondary' : 'gold'}
-                label={m.status === 'approved' ? 'Licensed' : 'Pending'}
-              />
+              <Badge variant="secondary" label="Licensed" />
             </View>
           </View>
         ))}
-        <Button
-          label="Find dispensaries near me"
-          icon="location_on"
-          variant="secondary"
-          loading={locating}
-          onPress={locate}
-          className="mb-8 mt-2"
-        />
-      </ScrollView>
+      </View>
+
+      <View className="px-4 pb-4">
+        <Button label="Find dispensaries near me" icon="location_on" variant="secondary" loading={locating} onPress={locate} />
+      </View>
     </Screen>
   );
 }
