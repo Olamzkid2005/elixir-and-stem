@@ -51,6 +51,9 @@ model User {
   reviews          Review[]
   loyaltyAccount   LoyaltyAccount?
   pushTokens       PushToken[]
+
+  @@index([email])
+  @@index([role])
 }
 
 model Merchant {
@@ -65,8 +68,6 @@ model Merchant {
   address         String
   lat             Float
   lng             Float
-  // Per-state compliance rules can be layered on per-merchant here later
-  // (delivery windows, purchase limits, product restrictions) without rewrites.
   stateCode       String?
   rating          Float?         @default(0) // denormalized avg rating
   deliveryEtaMin  Int            @default(45) // estimated min delivery minutes
@@ -75,6 +76,9 @@ model Merchant {
 
   products Product[]
   orders   Order[]
+
+  @@index([status])
+  @@index([userId])
 }
 
 model Product {
@@ -93,8 +97,8 @@ model Product {
   weightOptions Json  // [{ label: "3.5g", price: 4500 }, ...]
   stock         Int      @default(0)
   imageUrl      String?
-  imageColor    String?  @default("#d0e9d4") // placeholder art color (swap for imageUrl from S3)
-  effects       Json?    // [{ icon: "mood", label: "Energetic" }, ...] — derived from strainType/category
+  imageColor    String?  @default("#d0e9d4") // placeholder art color
+  effects       Json?    // [{ icon: "mood", label: "Energetic" }, ...]
   rating        Float?   @default(0) // denormalized avg rating
   reviewCount   Int      @default(0) // denormalized count
   createdAt     DateTime @default(now())
@@ -102,6 +106,10 @@ model Product {
   orderItems  OrderItem[]
   favorites   Favorite[]
   reviews     Review[]
+
+  @@index([merchantId])
+  @@index([category])
+  @@index([name])
 }
 
 model Order {
@@ -124,6 +132,12 @@ model Order {
   createdAt       DateTime    @default(now())
 
   items OrderItem[]
+
+  @@index([customerId])
+  @@index([merchantId])
+  @@index([riderId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -137,6 +151,9 @@ model OrderItem {
   priceAtPurchase Int // cents
 
   review Review?
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Favorite {
@@ -148,6 +165,7 @@ model Favorite {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+  @@index([userId])
 }
 
 model Review {
@@ -156,11 +174,14 @@ model Review {
   product     Product   @relation(fields: [productId], references: [id])
   customerId  String
   customer    User      @relation(fields: [customerId], references: [id])
-  orderItemId String    @unique // one review per purchased line item — enforces verified purchase
+  orderItemId String    @unique // one review per purchased line item
   orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
   rating      Int       // 1-5
   comment     String?
   createdAt   DateTime  @default(now())
+
+  @@index([productId])
+  @@index([customerId])
 }
 
 model LoyaltyAccount {
@@ -172,6 +193,8 @@ model LoyaltyAccount {
   updatedAt DateTime @updatedAt
 
   transactions LoyaltyTransaction[]
+
+  @@index([userId])
 }
 
 model LoyaltyTransaction {
@@ -182,6 +205,8 @@ model LoyaltyTransaction {
   points    Int // positive = earned, negative = redeemed
   reason    String // "order_earned" | "redeemed_reward" | "signup_bonus"
   createdAt DateTime        @default(now())
+
+  @@index([accountId])
 }
 
 model Rider {
@@ -196,6 +221,9 @@ model Rider {
   createdAt   DateTime @default(now())
 
   orders Order[]
+
+  @@index([isOnline])
+  @@index([userId])
 }
 
 model PushToken {
@@ -205,4 +233,6 @@ model PushToken {
   token     String   @unique
   platform  String   // "ios" | "android"
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }

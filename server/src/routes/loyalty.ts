@@ -107,31 +107,35 @@ loyaltyRouter.post('/redeem', async (req, res) => {
     return res.status(400).json({ error: 'Insufficient points.' });
   }
 
-  // Deduct points
-  const updated = await prisma.loyaltyAccount.update({
-    where: { id: account.id },
-    data: { points: { decrement: points } },
-  });
-
-  // Log redemption
-  await prisma.loyaltyTransaction.create({
-    data: {
-      accountId: account.id,
-      points: -points,
-      reason: 'redeemed_reward',
-    },
-  });
-
-  // Recompute tier
-  const newTier = computeTier(updated.points);
-  if (newTier !== updated.tier) {
-    await prisma.loyaltyAccount.update({
+  // Wrap points deduction + transaction logging + tier recomputation in a transaction
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await tx.loyaltyAccount.update({
       where: { id: account.id },
-      data: { tier: newTier },
+      data: { points: { decrement: points } },
     });
-  }
 
-  res.json({ ok: true, remainingPoints: updated.points, reward: reward.title, discountCents });
+    // Log redemption
+    await tx.loyaltyTransaction.create({
+      data: {
+        accountId: account.id,
+        points: -points,
+        reason: 'redeemed_reward',
+      },
+    });
+
+    // Recompute tier
+    const newTier = computeTier(updated.points);
+    if (newTier !== updated.tier) {
+      await tx.loyaltyAccount.update({
+        where: { id: account.id },
+        data: { tier: newTier },
+      });
+    }
+
+    return updated;
+  });
+
+  res.json({ ok: true, remainingPoints: result.points, reward: reward.title, discountCents });
 });
 
 /** GET /loyalty/rewards — available rewards catalog */

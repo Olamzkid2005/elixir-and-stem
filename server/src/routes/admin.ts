@@ -23,6 +23,9 @@ adminRouter.patch('/merchants/:id', async (req, res) => {
   if (!status || !['approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'Status must be approved or rejected.' });
   }
+  const existing = await prisma.merchant.findUnique({ where: { id: req.params.id } });
+  if (!existing) return res.status(404).json({ error: 'Merchant not found.' });
+
   const merchant = await prisma.merchant.update({
     where: { id: req.params.id },
     data: { status },
@@ -41,6 +44,9 @@ adminRouter.get('/users', async (_req, res) => {
 /** PATCH /admin/users/:id/suspend — flag/suspend an account. */
 adminRouter.patch('/users/:id/suspend', async (req, res) => {
   const { suspended } = req.body as { suspended?: boolean };
+  const existing = await prisma.user.findUnique({ where: { id: req.params.id } });
+  if (!existing) return res.status(404).json({ error: 'User not found.' });
+
   const user = await prisma.user.update({
     where: { id: req.params.id },
     data: { suspended: suspended ?? true },

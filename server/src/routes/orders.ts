@@ -5,11 +5,36 @@ import { awardOrderPoints } from './loyalty';
 import { notifyOrderStatusChange, notifyNewOrder } from '../notifications';
 import { calculateTax, calculateDeliveryFee, calculateDistance } from '../tax';
 import { getIo } from '../socket';
+import { STATUS_LABELS, NIGERIA_BOUNDS } from '../constants';
 
 export const ordersRouter = Router();
 
+// ── Shared helpers ────────────────────────────────────────────────────
+
+/** Shape returned to clients — consistent across merchant and customer views */
+type OrderListItem = any; // Prisma order with includes
+
+function mapOrderResponse(o: OrderListItem) {
+  return {
+    ...o,
+    merchantName: o.merchant?.businessName ?? '',
+    items: o.items.map((item: any) => ({
+      ...item,
+      imageUrl: item.product?.imageUrl,
+      imageColor: item.product?.imageColor,
+    })),
+  };
+}
+
+// ── Routes ────────────────────────────────────────────────────────────
+
 /** GET /orders — customers see their own; merchants see their shop's queue. */
 ordersRouter.get('/', requireAuth, async (req, res) => {
+  const include = {
+    items: { include: { product: { select: { imageUrl: true, imageColor: true } } } },
+    merchant: { select: { businessName: true } },
+  };
+
   if (req.user!.role === 'merchant') {
     const merchant = await prisma.merchant.findUnique({ where: { userId: req.user!.id } });
     if (!merchant) return res.json([]);
@@ -17,35 +42,16 @@ ordersRouter.get('/', requireAuth, async (req, res) => {
     const where: any = { merchantId: merchant.id };
     if (scheduled === 'true') where.scheduledFor = { not: null };
     else if (scheduled === 'false') where.scheduledFor = null;
-    const orders = await prisma.order.findMany({
-      where,
-      include: { items: { include: { product: { select: { imageUrl: true, imageColor: true } } } }, merchant: { select: { businessName: true } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    return res.json(orders.map((o) => ({
-      ...o,
-      merchantName: o.merchant?.businessName ?? '',
-      items: o.items.map((item) => ({
-        ...item,
-        imageUrl: item.product?.imageUrl,
-        imageColor: item.product?.imageColor,
-      })),
-    })));
+    const orders = await prisma.order.findMany({ where, include, orderBy: { createdAt: 'desc' } });
+    return res.json(orders.map(mapOrderResponse));
   }
+
   const orders = await prisma.order.findMany({
     where: { customerId: req.user!.id },
-    include: { items: { include: { product: { select: { imageUrl: true, imageColor: true } } } }, merchant: { select: { businessName: true } } },
+    include,
     orderBy: { createdAt: 'desc' },
   });
-  res.json(orders.map((o) => ({
-    ...o,
-    merchantName: o.merchant?.businessName ?? '',
-    items: o.items.map((item) => ({
-      ...item,
-      imageUrl: item.product?.imageUrl,
-      imageColor: item.product?.imageColor,
-    })),
-  })));
+  res.json(orders.map(mapOrderResponse));
 });
 
 const createInput = z.object({
@@ -53,6 +59,9 @@ const createInput = z.object({
   deliveryAddress: z.string().min(6),
   notes: z.string().optional(),
   scheduledFor: z.string().datetime().optional(),
+  // Validated customer coordinates for delivery fee calculation (Nigeria bounds)
+  customerLat: z.number().min(NIGERIA_BOUNDS.lat.min).max(NIGERIA_BOUNDS.lat.max).optional(),
+  customerLng: z.number().min(NIGERIA_BOUNDS.lng.min).max(NIGERIA_BOUNDS.lng.max).optional(),
   items: z.array(
     z.object({
       productId: z.string(),
@@ -89,10 +98,9 @@ ordersRouter.post('/', requireAuth, requireRole('customer'), async (req, res) =>
   // Calculate tax based on merchant's state
   const tax = calculateTax(subtotal, merchant.stateCode);
 
-  // Calculate delivery fee based on distance
-  // Customer location would come from request in production; for now use merchant coords as fallback
-  const customerLat = req.body.customerLat ?? merchant.lat;
-  const customerLng = req.body.customerLng ?? merchant.lng;
+  // Calculate delivery fee based on distance (validated coordinates from Zod, fallback to merchant)
+  const customerLat = parsed.data.customerLat ?? merchant.lat;
+  const customerLng = parsed.data.customerLng ?? merchant.lng;
   const distance = calculateDistance(merchant.lat, merchant.lng, customerLat, customerLng);
   const deliveryFee = calculateDeliveryFee(distance, subtotal);
 
@@ -132,18 +140,6 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
   rejected: [],
 };
 
-// Status labels for notifications
-const STATUS_LABELS: Record<string, string> = {
-  confirmed: 'Order Confirmed',
-  ready_for_pickup: 'Ready for Pickup',
-  rider_assigned: 'Rider Assigned',
-  picked_up: 'Order Picked Up',
-  out_for_delivery: 'Out for Delivery',
-  arrived: 'Rider Has Arrived',
-  delivered: 'Order Delivered',
-  rejected: 'Order Rejected',
-};
-
 ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (req, res) => {
   const { status } = req.body as { status?: string };
   const order = await prisma.order.findUnique({ where: { id: req.params.id } });
@@ -160,7 +156,6 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
   if (status === 'ready_for_pickup' && !riderId) {
     riderId = await assignNearestRider(merchant.lat, merchant.lng);
     if (!riderId) {
-      // No riders available — keep in ready_for_pickup, customer will be notified of delay
       console.log(`[Orders] No riders available for order ${order.id}`);
     }
   }
@@ -214,15 +209,13 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
  * Returns riderId or null if no riders available.
  */
 async function assignNearestRider(merchantLat: number, merchantLng: number): Promise<string | null> {
-  // Find online riders, sorted by proximity to merchant
   const onlineRiders = await prisma.rider.findMany({
     where: { isOnline: true, lat: { not: null }, lng: { not: null } },
-    orderBy: { rating: 'desc' }, // prefer higher-rated riders
+    orderBy: { rating: 'desc' },
   });
 
   if (onlineRiders.length === 0) return null;
 
-  // Calculate distance to each rider and sort by proximity
   const ridersWithDistance = onlineRiders
     .map((rider) => ({
       ...rider,
@@ -230,8 +223,7 @@ async function assignNearestRider(merchantLat: number, merchantLng: number): Pro
     }))
     .sort((a, b) => a.distance - b.distance);
 
-  // Return nearest rider (within 10km)
   const nearest = ridersWithDistance[0];
-  if (nearest.distance > 10) return null; // too far
+  if (nearest.distance > 10) return null;
   return nearest.id;
 }

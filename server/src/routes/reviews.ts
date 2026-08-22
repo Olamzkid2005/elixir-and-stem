@@ -40,44 +40,49 @@ reviewsRouter.post('/', async (req, res) => {
     return res.status(409).json({ error: 'You have already reviewed this item.' });
   }
 
-  const review = await prisma.review.create({
-    data: {
-      productId: orderItem.productId,
-      customerId: req.user!.id,
-      orderItemId,
-      rating,
-      comment,
-    },
-    include: { customer: { select: { id: true, email: true } } },
-  });
+  // Wrap review creation + denormalized rating updates in a transaction
+  const review = await prisma.$transaction(async (tx) => {
+    const newReview = await tx.review.create({
+      data: {
+        productId: orderItem.productId,
+        customerId: req.user!.id,
+        orderItemId,
+        rating,
+        comment,
+      },
+      include: { customer: { select: { id: true, email: true } } },
+    });
 
-  // Update denormalized product rating
-  const productReviews = await prisma.review.findMany({
-    where: { productId: orderItem.productId },
-    select: { rating: true },
-  });
-  const avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
-  await prisma.product.update({
-    where: { id: orderItem.productId },
-    data: { rating: Math.round(avgRating * 10) / 10, reviewCount: productReviews.length },
-  });
+    // Update denormalized product rating
+    const productReviews = await tx.review.findMany({
+      where: { productId: orderItem.productId },
+      select: { rating: true },
+    });
+    const avgRating = productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length;
+    await tx.product.update({
+      where: { id: orderItem.productId },
+      data: { rating: Math.round(avgRating * 10) / 10, reviewCount: productReviews.length },
+    });
 
-  // Update denormalized merchant rating (average of all product ratings)
-  const merchantProducts = await prisma.product.findMany({
-    where: { merchantId: orderItem.product.merchantId },
-    select: { rating: true },
-  });
-  const merchantAvg =
-    merchantProducts.reduce((sum, p) => sum + (p.rating ?? 0), 0) / merchantProducts.length;
-  await prisma.merchant.update({
-    where: { id: orderItem.product.merchantId },
-    data: { rating: Math.round(merchantAvg * 10) / 10 },
+    // Update denormalized merchant rating (average of all product ratings)
+    const merchantProducts = await tx.product.findMany({
+      where: { merchantId: orderItem.product.merchantId },
+      select: { rating: true },
+    });
+    const merchantAvg =
+      merchantProducts.reduce((sum, p) => sum + (p.rating ?? 0), 0) / merchantProducts.length;
+    await tx.merchant.update({
+      where: { id: orderItem.product.merchantId },
+      data: { rating: Math.round(merchantAvg * 10) / 10 },
+    });
+
+    return newReview;
   });
 
   res.status(201).json(review);
 });
 
-/** GET /products/:id/reviews — list reviews for a product */
+/** GET /reviews/product/:id — list reviews for a product */
 reviewsRouter.get('/product/:id', async (req, res) => {
   const reviews = await prisma.review.findMany({
     where: { productId: req.params.id },
@@ -87,7 +92,7 @@ reviewsRouter.get('/product/:id', async (req, res) => {
   res.json(reviews);
 });
 
-/** GET /merchants/:id/reviews — list reviews for all of a merchant's products */
+/** GET /reviews/merchant/:id — list reviews for all of a merchant's products */
 reviewsRouter.get('/merchant/:id', async (req, res) => {
   const reviews = await prisma.review.findMany({
     where: { product: { merchantId: req.params.id } },

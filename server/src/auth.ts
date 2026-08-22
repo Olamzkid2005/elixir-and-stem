@@ -4,10 +4,17 @@ import { PrismaClient, Role } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
+// ── JWT_SECRET validation ─────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  console.warn('JWT_SECRET is not set — set it in .env before running in production.');
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET must be set in production');
+    process.exit(1);
+  }
+  console.warn('⚠️  JWT_SECRET is not set — using dev-only fallback. Set it in .env for production.');
 }
+
+const SECRET = JWT_SECRET ?? 'dev-only-secret';
 
 export interface AuthUser {
   id: string;
@@ -24,7 +31,7 @@ declare global {
 }
 
 export function signToken(user: AuthUser): string {
-  return jwt.sign(user, JWT_SECRET ?? 'dev-only-secret', { expiresIn: '7d' });
+  return jwt.sign(user, SECRET, { expiresIn: '7d' });
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -33,7 +40,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ error: 'Missing token' });
   }
   try {
-    req.user = jwt.verify(header.slice(7), JWT_SECRET ?? 'dev-only-secret') as AuthUser;
+    req.user = jwt.verify(header.slice(7), SECRET) as AuthUser;
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });

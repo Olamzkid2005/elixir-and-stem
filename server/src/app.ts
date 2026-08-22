@@ -12,8 +12,31 @@ import { pushTokensRouter } from './routes/pushTokens';
 import { uploadRouter } from './routes/upload';
 import { ridersRouter } from './routes/riders';
 
+// ── Fail fast if JWT_SECRET is missing in production ──────────────────
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('FATAL: JWT_SECRET must be set in production');
+  process.exit(1);
+}
+
 const app = express();
-app.use(cors());
+
+// ── CORS — restrict to known origins in production ────────────────────
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  : ['http://localhost:8081', 'http://localhost:19006']; // Expo defaults
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, server-to-server)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '2mb' }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -30,10 +53,13 @@ app.use('/push-tokens', pushTokensRouter);
 app.use('/upload', uploadRouter);
 app.use('/riders', ridersRouter);
 
-// Central error handler — routes throw { status, message } style errors.
+// Central error handler — logs 500s, returns structured error
 app.use(
-  (err: { status?: number; message?: string }, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  (err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const status = err.status ?? 500;
+    if (status >= 500) {
+      console.error(`[Error] ${status}:`, err.message, err.stack);
+    }
     res.status(status).json({ error: err.message ?? 'Internal server error' });
   }
 );

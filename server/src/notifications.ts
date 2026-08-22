@@ -1,8 +1,6 @@
 import { prisma } from './auth';
+import { STATUS_LABELS, STATUS_MESSAGES } from './constants';
 
-const EXPO_PUSH_URL = 'https://expo-server-proxy.vercel.app/api/push/send';
-
-// Fallback: use Expo's direct API if proxy not available
 const EXPO_API_URL = 'https://exp.host/--/api/v2/push/send';
 
 interface PushPayload {
@@ -44,22 +42,6 @@ async function sendPushNotifications(payloads: PushPayload[]): Promise<void> {
     }
   }
 }
-
-const STATUS_LABELS: Record<string, string> = {
-  placed: 'Order Received',
-  confirmed: 'Order Confirmed',
-  out_for_delivery: 'Out for Delivery',
-  delivered: 'Delivered',
-  rejected: 'Order Rejected',
-};
-
-const STATUS_MESSAGES: Record<string, string> = {
-  placed: 'Your order has been received and is being reviewed.',
-  confirmed: 'Your order is being prepared by the dispensary.',
-  out_for_delivery: 'Your order is on its way to you!',
-  delivered: 'Your order has been delivered. Enjoy!',
-  rejected: 'Your order could not be fulfilled. Please contact support.',
-};
 
 /**
  * Send push notification to a customer when their order status changes.
@@ -110,7 +92,7 @@ export async function notifyNewOrder(
 
   if (tokens.length === 0) return;
 
-  const total = `$${(totalCents / 100).toFixed(2)}`;
+  const total = `₦${(totalCents / 100).toFixed(0)}`;
   const payloads: PushPayload[] = tokens.map((t) => ({
     to: t.token,
     title: 'New Order',
