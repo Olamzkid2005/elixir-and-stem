@@ -175,6 +175,27 @@ cd server && npm test       # 92 tests across 10 suites
 - **Rider self-location** — riders should broadcast their own GPS (currently admin-only endpoint)
 - **Frontend tests** — blocked by Expo SDK 54 reanimated plugin in Jest
 
+### ⚠️ Expo Go Compatibility Issues (2026-08-22)
+
+The app uses features that don't work fully in Expo Go:
+
+| Issue | Root Cause | Workaround |
+|-------|-----------|------------|
+| `react-native-reanimated` v4 TurboModule crash (`installTurboModule` / `NativeWorklets`) | Reanimated 4 requires New Architecture + separate `react-native-worklets` package | Fixed: installed `react-native-worklets` via `npx expo install` |
+| `react-native-maps` crashes on startup | Native-only module imported at top level of BrowseScreen/OrderTrackingScreen, breaks before NavigationContainer mounts | Fixed: lazy-loaded via `React.lazy` in RootNavigator |
+| `react-native-maps` shows blank tiles | No Google Maps API key configured | Needs real key from Google Cloud Console |
+| Reanimated 4 animations may not render | Expo Go ships fixed native binaries that may not match Reanimated 4's expectations | **Build a dev client**: `npx expo prebuild --clean && npx expo run:android` |
+| Socket.io fallback to polling | Expo Go has limited WebSocket support | Works via 5s polling fallback in `useRiderLocation` |
+
+**To get full functionality**, build a custom dev client:
+```bash
+cd app
+npx expo prebuild --clean
+npx expo run:android   # or npx expo run:ios
+```
+
+This bakes all native modules (Reanimated, maps, gestures) into the binary so everything works.
+
 ## Recent changes / gotchas
 
 - **SDK 51 → 54 upgrade**: `babel-preset-expo` must be a direct dependency (v54.0.12)
