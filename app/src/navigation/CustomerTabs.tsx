@@ -5,6 +5,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { CustomerTabParamList, CustomerDrawerParamList } from './types';
 import { Icon, type IconName } from '@/components/ui/Icon';
+import { AnimatedBadge } from '@/components/ui/AnimatedBadge';
 import { useCart } from '@/store/cart';
 import { useAuth } from '@/store/auth';
 import { DrawerContent } from './DrawerContent';
@@ -66,10 +67,11 @@ function CustomerTabNavigator() {
         tabBarIcon: ({ color, focused }) => (
           <View className="items-center">
             <Icon name={tabIcons[route.name]} size={22} color={color} />
-            {route.name === 'Cart' && cartCount > 0 && (
-              <View className="absolute -right-2 -top-1 h-4 min-w-4 items-center justify-center rounded-full bg-error px-1">
-                <Text className="font-body-semibold text-[9px] text-on-error">{cartCount}</Text>
-              </View>
+            {route.name === 'Cart' && (
+              <AnimatedBadge
+                count={cartCount}
+                className="absolute -right-2 -top-1"
+              />
             )}
           </View>
         ),

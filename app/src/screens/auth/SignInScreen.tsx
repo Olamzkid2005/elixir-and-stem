@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } fro
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { ShakeInput } from '@/components/ui/ShakeInput';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/store/auth';
 import { useOAuth } from '@/lib/useOAuth';
@@ -12,7 +12,6 @@ import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SignIn'>;
 
-/** Sign In / Create Account with tab toggle — matches design reference. */
 export function SignInScreen({ navigation }: Props) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [email, setEmail] = useState('');
@@ -108,27 +107,29 @@ export function SignInScreen({ navigation }: Props) {
                   : 'Create your account to start your wellness journey.'}
             </Text>
 
-            <Input
+            {/* ShakeInput with error shake animation */}
+            <ShakeInput
               label="Email Address"
               icon="mail"
               placeholder="you@example.com"
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(t) => { setEmail(t); setError(''); }}
+              error={error && !/^\S+@\S+\.\S+$/.test(email) ? error : undefined}
               className="mb-5"
             />
-            <Input
+            <ShakeInput
               label="Password"
               icon="lock"
               placeholder="••••••••"
               secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
-              error={error}
+              onChangeText={(t) => { setPassword(t); setError(''); }}
+              error={error && password.length < 8 ? error : undefined}
               rightSlot={
                 <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
-                  <Icon name={showPassword ? 'visibility_off' : 'visibility_off'} size={20} color="#737973" />
+                  <Icon name="visibility_off" size={20} color="#737973" />
                 </Pressable>
               }
             />

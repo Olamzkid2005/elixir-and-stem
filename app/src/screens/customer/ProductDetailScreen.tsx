@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/Badge';
 import { Chip } from '@/components/ui/Chip';
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
+import { ExpandableSection } from '@/components/ui/ExpandableSection';
 import { ProductImage } from '@/components/ProductImage';
 import { AppHeader } from '@/components/AppHeader';
 import { formatPrice, type WeightOption, type Review } from '@/api/types';
@@ -26,7 +29,6 @@ export function ProductDetailScreen({ route, navigation }: Props) {
   const add = useCart((s) => s.add);
   const cartCount = useCart((s) => s.items.reduce((n, i) => n + i.quantity, 0));
   const { toggle, isFavorite, refresh: refreshFavorites } = useFavorites();
-  const [showReviews, setShowReviews] = useState(false);
 
   useEffect(() => {
     refreshFavorites();
@@ -56,37 +58,22 @@ export function ProductDetailScreen({ route, navigation }: Props) {
                 left: 0,
                 right: 0,
                 height: 100,
-                backgroundColor: 'transparent',
+                backgroundColor: 'rgba(0,0,0,0.25)',
                 borderBottomLeftRadius: 24,
                 borderBottomRightRadius: 24,
               }}
               pointerEvents="none"
-            >
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: 100,
-                  backgroundColor: 'rgba(0,0,0,0.25)',
-                  borderBottomLeftRadius: 24,
-                  borderBottomRightRadius: 24,
-                }}
-              />
-            </View>
-            <Pressable
-              onPress={() => toggle(product.id)}
-              hitSlop={8}
-              className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-surface/80 shadow-elevation-2"
+            />
+            {/* Favorite button with pop animation */}
+            <View
+              className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-surface/80"
               style={{ elevation: 2 }}
             >
-              <Icon
-                name={favorited ? 'favorite' : 'favorite_border'}
-                size={22}
-                color={favorited ? '#ba1a1a' : '#1b1c19'}
+              <FavoriteButton
+                isFavorite={favorited}
+                onToggle={() => toggle(product.id)}
               />
-            </Pressable>
+            </View>
           </View>
         </View>
 
@@ -166,7 +153,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             </>
           )}
 
-          {/* Weight selector */}
+          {/* Weight selector — with spring press animation */}
           <View className="mb-3 mt-7 flex-row items-baseline justify-between">
             <Text className="font-body-semibold text-xs uppercase tracking-widest text-on-surface-variant">
               Select Weight
@@ -175,13 +162,14 @@ export function ProductDetailScreen({ route, navigation }: Props) {
           </View>
           <View className="flex-row gap-2">
             {product.weightOptions.map((w) => (
-              <Pressable
+              <AnimatedPressable
                 key={w.label}
+                springScale={0.95}
                 onPress={() => setWeight(w)}
                 className={cn(
                   'flex-1 items-center rounded-2xl border-2 py-3.5',
                   weight.label === w.label
-                    ? 'border-primary bg-primary shadow-elevation-1'
+                    ? 'border-primary bg-primary'
                     : 'border-outline-variant bg-surface-container-lowest'
                 )}
                 style={{ elevation: weight.label === w.label ? 1 : 0 }}
@@ -202,7 +190,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
                 >
                   {formatPrice(w.price)}
                 </Text>
-              </Pressable>
+              </AnimatedPressable>
             ))}
           </View>
 
@@ -218,67 +206,50 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             />
           </View>
 
-          {/* Reviews section */}
-          <Pressable
-            onPress={() => setShowReviews(!showReviews)}
-            className="flex-row items-center justify-between rounded-2xl bg-surface-container-lowest p-4 shadow-elevation-1"
-            style={{ elevation: 1 }}
+          {/* Reviews section — with accordion expand */}
+          <ExpandableSection
+            title={`Reviews (${reviews.length})`}
+            icon="rate_review"
           >
-            <View className="flex-row items-center gap-2">
-              <Icon name="rate_review" size={20} color="#4d644b" />
-              <Text className="font-body-semibold text-base text-on-surface">
-                Reviews ({reviews.length})
-              </Text>
-            </View>
-            <Icon
-              name={showReviews ? 'expand_less' : 'expand_more'}
-              size={22}
-              color="#737973"
-            />
-          </Pressable>
-
-          {showReviews && (
-            <View className="mt-3 gap-3 pb-4">
-              {reviews.length === 0 && (
-                <View className="items-center rounded-2xl bg-surface-container-lowest py-10">
-                  <Icon name="rate_review" size={32} color="#c3c8c1" />
-                  <Text className="mt-2 font-body text-sm text-on-surface-variant">
-                    No reviews yet — be the first!
+            {reviews.length === 0 && (
+              <View className="items-center rounded-2xl bg-surface-container-lowest py-10">
+                <Icon name="rate_review" size={32} color="#c3c8c1" />
+                <Text className="mt-2 font-body text-sm text-on-surface-variant">
+                  No reviews yet — be the first!
+                </Text>
+              </View>
+            )}
+            {reviews.map((review) => (
+              <View key={review.id} className="mb-3 rounded-2xl bg-surface-container-lowest p-4">
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Icon
+                        key={star}
+                        name={star <= review.rating ? 'star' : 'star_border'}
+                        size={14}
+                        color={star <= review.rating ? '#e9c176' : '#c3c8c1'}
+                      />
+                    ))}
+                  </View>
+                  <Text className="font-body text-xs text-on-surface-variant">
+                    {new Date(review.createdAt).toLocaleDateString()}
                   </Text>
                 </View>
-              )}
-              {reviews.map((review) => (
-                <View key={review.id} className="rounded-2xl bg-surface-container-lowest p-4 shadow-elevation-1" style={{ elevation: 1 }}>
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Icon
-                          key={star}
-                          name={star <= review.rating ? 'star' : 'star_border'}
-                          size={14}
-                          color={star <= review.rating ? '#e9c176' : '#c3c8c1'}
-                        />
-                      ))}
-                    </View>
-                    <Text className="font-body text-xs text-on-surface-variant">
-                      {new Date(review.createdAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  {review.comment && (
-                    <Text className="mt-2 font-body text-sm text-on-surface leading-5">
-                      {review.comment}
-                    </Text>
-                  )}
-                  <View className="mt-2 flex-row items-center gap-1">
-                    <Icon name="verified" size={12} color="#4d644b" />
-                    <Text className="font-body text-xs text-on-surface-variant">
-                      Verified purchase
-                    </Text>
-                  </View>
+                {review.comment && (
+                  <Text className="mt-2 font-body text-sm text-on-surface leading-5">
+                    {review.comment}
+                  </Text>
+                )}
+                <View className="mt-2 flex-row items-center gap-1">
+                  <Icon name="verified" size={12} color="#4d644b" />
+                  <Text className="font-body text-xs text-on-surface-variant">
+                    Verified purchase
+                  </Text>
                 </View>
-              ))}
-            </View>
-          )}
+              </View>
+            ))}
+          </ExpandableSection>
         </View>
       </ScrollView>
 
@@ -295,13 +266,14 @@ export function ProductDetailScreen({ route, navigation }: Props) {
           }}
         />
         {cartCount > 0 && (
-          <Pressable
+          <AnimatedPressable
+            springScale={0.9}
             onPress={() => navigation.navigate('CustomerTabs', { screen: 'Cart' })}
-            className="h-12 w-12 items-center justify-center rounded-full bg-secondary-container shadow-elevation-1"
+            className="h-12 w-12 items-center justify-center rounded-full bg-secondary-container"
             style={{ elevation: 1 }}
           >
             <Icon name="shopping_bag" size={22} color="#536a51" />
-          </Pressable>
+          </AnimatedPressable>
         )}
       </View>
     </Screen>
