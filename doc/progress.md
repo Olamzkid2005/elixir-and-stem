@@ -147,13 +147,13 @@ cd server && npm test       # 92 tests across 10 suites
 | Maps | Google Maps Platform | ✅ $200/mo free tier |
 | Auth | JWT + bcrypt (current) | ✅ Works fine |
 | Auth | Apple/Google Sign-In | Phase 3 — reduce friction |
-| Real-time | Socket.io (WebSockets) | Phase 3 — live rider tracking |
+| Real-time | Socket.io (WebSockets) | ✅ Implemented — real-time rider tracking |
 
 ### Google Maps Integration ✅
 - Real Google Maps on Browse screen with merchant markers (lat/lng pins)
 - Tap marker → merchant info card with name, address, rating, ETA
 - User location marker with blue dot
-- Live rider tracking map on OrderTrackingScreen (polling-based)
+- Live rider tracking map on OrderTrackingScreen (Socket.io real-time + polling fallback)
 - Default region: Lagos, Nigeria
 - Requires Google Maps API key (see setup below)
 
@@ -161,7 +161,7 @@ cd server && npm test       # 92 tests across 10 suites
 
 - **Google Maps API key** — needs a real key set in `app.json` and Google Cloud Console
 - **Payments** — pay-on-delivery only for MVP; add Aeropay/Dutchie in Phase 3
-- **Real-time tracking** — Socket.io upgrade from polling (Phase 3)
+- **Rider self-location** — riders should broadcast their own GPS (currently admin-only endpoint)
 - **Social login** — Apple/Google Sign-In (Phase 3)
 - **Frontend tests** — blocked by Expo SDK 54 reanimated plugin in Jest
 
@@ -172,6 +172,15 @@ cd server && npm test       # 92 tests across 10 suites
 - `npx expo upgrade` no longer exists — edit package.json manually for SDK bumps
 - Server refactored: Express app extracted to `src/app.ts` for testability
 - `useRef` in React 19 requires initial value argument
+
+### Socket.io Real-Time Tracking ✅
+- Socket.io server integrated with Express (HTTP server + WebSocket)
+- Real-time `rider:location` events emitted on location updates
+- `order:status` and `rider:assigned` events on status transitions
+- Client-side `subscribeToOrder()` for declarative real-time subscriptions
+- `useRiderLocation` hook uses Socket.io in dev builds, falls back to 5s polling in Expo Go
+- Shared `socket.ts` module avoids circular dependencies
+- Room-based routing: clients join `order:<id>` rooms for targeted broadcasts
 
 ## Google Maps Setup
 

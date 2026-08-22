@@ -4,6 +4,7 @@ import { prisma, requireAuth, requireRole } from '../auth';
 import { awardOrderPoints } from './loyalty';
 import { notifyOrderStatusChange, notifyNewOrder } from '../notifications';
 import { calculateTax, calculateDeliveryFee, calculateDistance } from '../tax';
+import { getIo } from '../socket';
 
 export const ordersRouter = Router();
 
@@ -180,6 +181,30 @@ ordersRouter.patch('/:id/status', requireAuth, requireRole('merchant'), async (r
 
   // Send push notification to customer (fire-and-forget)
   notifyOrderStatusChange(order.id, order.customerId, status, merchant.businessName).catch(() => {});
+
+  // Emit Socket.io event for real-time tracking
+  const io = getIo();
+  if (io) {
+    io.to(`order:${order.id}`).emit('order:status', {
+      orderId: order.id,
+      status,
+      label: STATUS_LABELS[status] ?? status,
+    });
+
+    // When rider is assigned, also emit rider info
+    if (status === 'rider_assigned' && updated.rider) {
+      io.to(`order:${order.id}`).emit('rider:assigned', {
+        orderId: order.id,
+        rider: {
+          id: updated.rider.id,
+          lat: updated.rider.lat,
+          lng: updated.rider.lng,
+          vehicleType: updated.rider.vehicleType,
+          rating: updated.rider.rating,
+        },
+      });
+    }
+  }
 
   res.json({ ...updated, merchantName: merchant.businessName });
 });

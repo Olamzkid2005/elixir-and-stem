@@ -1,5 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '@/api/client';
+import { subscribeToOrder, getSocket } from '@/lib/socket';
 
 interface RiderLocation {
   id: string;
@@ -10,55 +11,79 @@ interface RiderLocation {
   rating: number;
 }
 
-const POLL_INTERVAL = 5000; // 5 seconds
-
 /**
- * Polls rider location for an order.
- * Returns rider location and loading state.
- * Only polls when order status is rider_assigned, picked_up, or out_for_delivery.
+ * Track a rider's location for an order.
+ *
+ * Uses Socket.io when available (dev build), falls back to polling in Expo Go.
+ * - Socket mode: receives real-time `rider:location` events
+ * - Polling mode: fetches every 5 seconds as fallback
  */
 export function useRiderLocation(
-  orderId: string | undefined,
-  riderId: string | undefined,
-  shouldTrack: boolean
+  orderId: string,
+  riderId?: string | null,
+  shouldTrack = false
 ) {
   const [rider, setRider] = useState<RiderLocation | null>(null);
-  const [loading, setLoading] = useState(false);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const socketRef = useRef<(() => void) | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    // Clean up previous interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (!shouldTrack || !riderId) {
+    if (!shouldTrack || !orderId) {
       setRider(null);
       return;
     }
 
-    // Initial fetch
-    const fetchLocation = async () => {
-      try {
-        const location = await api.getRiderLocation(riderId);
-        setRider(location);
-      } catch (err) {
-        console.error('[RiderLocation] Failed to fetch:', err);
+    const socket = getSocket();
+
+    if (socket) {
+      // ── Socket.io mode: real-time updates ──
+      const unsub = subscribeToOrder(orderId, {
+        onRiderAssigned: (data) => {
+          if (data.rider) {
+            setRider((prev) => ({
+              ...(prev ?? { id: data.rider.id, isOnline: true, vehicleType: 'motorcycle', rating: 5.0 }),
+              ...data.rider,
+            }));
+          }
+        },
+        onRiderLocation: (data) => {
+          setRider((prev) => ({
+            id: data.riderId,
+            lat: data.lat,
+            lng: data.lng,
+            isOnline: true,
+            vehicleType: data.vehicleType ?? prev?.vehicleType ?? 'motorcycle',
+            rating: data.rating ?? prev?.rating ?? 5.0,
+          }));
+        },
+      });
+      socketRef.current = unsub;
+
+      // Also do an initial fetch in case rider is already assigned
+      if (riderId) {
+        api.getRiderLocation(riderId).then(setRider).catch(() => {});
       }
-    };
+    } else {
+      // ── Polling fallback (Expo Go) ──
+      const fetchLocation = () => {
+        if (riderId) {
+          api.getRiderLocation(riderId).then(setRider).catch(() => {});
+        }
+      };
 
-    fetchLocation();
-
-    // Start polling
-    intervalRef.current = setInterval(fetchLocation, POLL_INTERVAL);
+      fetchLocation(); // immediate
+      pollingRef.current = setInterval(fetchLocation, 5000);
+    }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      socketRef.current?.();
+      socketRef.current = null;
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
     };
   }, [orderId, riderId, shouldTrack]);
 
-  return { rider, loading };
+  return { rider };
 }

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma, requireAuth, requireRole } from '../auth';
+import { getIo } from '../socket';
 
 export const ridersRouter = Router();
 
@@ -91,7 +92,9 @@ ridersRouter.post('/', requireAuth, requireRole('admin'), async (req, res) => {
   res.status(201).json(rider);
 });
 
-/** PATCH /riders/:id/location — update rider location (admin) */
+/** PATCH /riders/:id/location — update rider location (admin)
+ *  Also emits Socket.io 'rider:location' event to all active orders for this rider.
+ */
 ridersRouter.patch('/:id/location', requireAuth, requireRole('admin'), async (req, res) => {
   const parsed = locationUpdate.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: 'Invalid location.' });
@@ -103,6 +106,33 @@ ridersRouter.patch('/:id/location', requireAuth, requireRole('admin'), async (re
     where: { id: rider.id },
     data: { lat: parsed.data.lat, lng: parsed.data.lng },
   });
+
+  // Emit real-time location to all clients tracking this rider's orders
+  const io = getIo();
+  if (io) {
+    // Find active orders assigned to this rider
+    const activeOrders = await prisma.order.findMany({
+      where: {
+        riderId: rider.id,
+        status: { in: ['rider_assigned', 'picked_up', 'out_for_delivery', 'arrived'] },
+      },
+      select: { id: true },
+    });
+
+    const locationPayload = {
+      riderId: rider.id,
+      lat: updated.lat,
+      lng: updated.lng,
+      vehicleType: updated.vehicleType,
+      rating: updated.rating,
+    };
+
+    // Emit to each active order's room
+    for (const order of activeOrders) {
+      io.to(`order:${order.id}`).emit('rider:location', locationPayload);
+    }
+  }
+
   res.json(updated);
 });
 
@@ -117,5 +147,15 @@ ridersRouter.patch('/:id/online', requireAuth, requireRole('admin'), async (req,
     where: { id: rider.id },
     data: { isOnline: isOnline ?? !rider.isOnline },
   });
+
+  // Emit online status change
+  const io = getIo();
+  if (io) {
+    io.to(`dispatch:${rider.id}`).emit('rider:online', {
+      riderId: rider.id,
+      isOnline: updated.isOnline,
+    });
+  }
+
   res.json(updated);
 });
