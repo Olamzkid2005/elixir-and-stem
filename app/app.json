@@ -32,12 +32,6 @@
       "expo-secure-store",
       "expo-notifications",
       [
-        "react-native-maps",
-        {
-          "locationWhenInUsePermission": "Allow Elixir & Stem to show dispensary locations and rider tracking on the map."
-        }
-      ],
-      [
         "expo-apple-authentication",
         {
           "signInMode": "native"
