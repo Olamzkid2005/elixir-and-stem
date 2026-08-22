@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -22,26 +22,6 @@ export function SignInScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const { signIn, role } = useAuth();
   const { signInWithGoogle, signInWithApple, loading: oauthLoading, error: oauthError } = useOAuth();
-
-  // Entrance animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(15)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
 
   const validate = () => {
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Enter a valid email address.';
@@ -83,13 +63,7 @@ export function SignInScreen({ navigation }: Props) {
             </Pressable>
           </View>
 
-          <Animated.View
-            style={{
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            }}
-            className="px-6 pt-4"
-          >
+          <View className="px-6 pt-4">
             {/* Brand wordmark */}
             <View className="flex-row items-center justify-center gap-2">
               <View className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -209,7 +183,7 @@ export function SignInScreen({ navigation }: Props) {
               <Text className="font-body-semibold text-secondary">Terms of Service</Text> and{' '}
               <Text className="font-body-semibold text-secondary">Privacy Policy</Text>.
             </Text>
-          </Animated.View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,6 @@ import type { RootStackParamList } from '@/navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
-/** Product Detail — hero with gradient overlay, strain stats, terpenes, effects, weight tiers, favorites, reviews. */
 export function ProductDetailScreen({ route, navigation }: Props) {
   const { product } = route.params;
   const [weight, setWeight] = useState<WeightOption>(product.weightOptions[0]);
@@ -29,15 +28,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
   const { toggle, isFavorite, refresh: refreshFavorites } = useFavorites();
   const [showReviews, setShowReviews] = useState(false);
 
-  // Entrance animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
     refreshFavorites();
     api.listProductReviews(product.id).then(setReviews).catch(() => {});
   }, [product.id]);
@@ -58,7 +49,6 @@ export function ProductDetailScreen({ route, navigation }: Props) {
         <View className="px-4">
           <View className="relative overflow-hidden rounded-3xl">
             <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-72 w-full rounded-3xl" iconSize={72} />
-            {/* Gradient overlay */}
             <View
               style={{
                 position: 'absolute',
@@ -85,7 +75,6 @@ export function ProductDetailScreen({ route, navigation }: Props) {
                 }}
               />
             </View>
-            {/* Favorites toggle */}
             <Pressable
               onPress={() => toggle(product.id)}
               hitSlop={8}
@@ -101,7 +90,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
           </View>
         </View>
 
-        <Animated.View style={{ opacity: fadeAnim }} className="px-4 pt-5">
+        <View className="px-4 pt-5">
           <View className="flex-row items-center justify-between">
             <Badge variant="secondary" label={strain} />
             <View className="flex-row items-center gap-1">
@@ -117,7 +106,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
             {product.description}
           </Text>
 
-          {/* THC / CBD stats — gradient cards */}
+          {/* THC / CBD stats */}
           <View className="mt-5 flex-row gap-3">
             <View className="flex-1 items-center overflow-hidden rounded-3xl bg-primary py-5">
               <Text className="font-body-semibold text-xs uppercase tracking-widest text-on-primary-container">
@@ -290,7 +279,7 @@ export function ProductDetailScreen({ route, navigation }: Props) {
               ))}
             </View>
           )}
-        </Animated.View>
+        </View>
       </ScrollView>
 
       {/* Purchase action bar */}

@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useEffect } from 'react';
-import { Animated, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -46,17 +46,6 @@ export function OrderTrackingScreen({ route }: Props) {
     }
     return orders.find((o) => o.id === route.params?.orderId) ?? activeOrder;
   }, [activeOrder, orders, route.params?.orderId]);
-
-  // Entrance animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
 
   if (!order) {
     return (
@@ -136,7 +125,7 @@ export function OrderTrackingScreen({ route }: Props) {
 
         {/* Expected arrival */}
         {order.etaMins && isLive && (
-          <Animated.View style={{ opacity: fadeAnim }} className="mt-5 overflow-hidden rounded-3xl">
+          <View className="mt-5 overflow-hidden rounded-3xl">
             <View className="absolute inset-0 bg-primary" />
             {/* Decorative circle */}
             <View
@@ -163,7 +152,7 @@ export function OrderTrackingScreen({ route }: Props) {
                 </Text>
               </View>
             </View>
-          </Animated.View>
+          </View>
         )}
 
         {/* Courier / Rider */}

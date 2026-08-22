@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/ui/Screen';
@@ -29,15 +29,7 @@ export function HomeScreen() {
   const { favorites, initialized, refresh: refreshFavorites } = useFavorites();
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-  // Entrance animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
     refreshFavorites();
   }, []);
 
@@ -88,8 +80,7 @@ export function HomeScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Hero greeting */}
         {!query && !category && (
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <View className="mx-4 mt-3 overflow-hidden rounded-3xl bg-primary p-5">
+          <View className="mx-4 mt-3 overflow-hidden rounded-3xl bg-primary p-5">
               {/* Decorative circles */}
               <View
                 style={{
@@ -131,7 +122,6 @@ export function HomeScreen() {
                 </View>
               </View>
             </View>
-          </Animated.View>
         )}
 
         {/* Search */}

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import React from 'react';
+import { Pressable, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { Icon } from '@/components/ui/Icon';
@@ -12,26 +12,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'RoleSelect'>;
 export function RoleSelectScreen({ navigation }: Props) {
   const setRole = useAuth((s) => s.setRole);
 
-  // Entrance animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   const choose = (role: 'customer' | 'merchant') => {
     setRole(role);
     navigation.navigate('SignIn');
@@ -39,13 +19,7 @@ export function RoleSelectScreen({ navigation }: Props) {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <Animated.View
-        style={{
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        }}
-        className="flex-1 justify-center px-6"
-      >
+      <View className="flex-1 justify-center px-6">
         {/* Brand mark */}
         <View className="mb-4 h-14 w-14 items-center justify-center rounded-2xl bg-primary">
           <Icon name="local_florist" size={28} color="#ffffff" />
@@ -103,7 +77,7 @@ export function RoleSelectScreen({ navigation }: Props) {
         <Text className="mt-8 text-center font-body text-xs leading-4 text-on-surface-variant">
           Merchants must hold a valid state license and complete verification before going live.
         </Text>
-      </Animated.View>
+      </View>
     </Screen>
   );
 }
