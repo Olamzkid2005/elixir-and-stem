@@ -46,20 +46,26 @@ function CustomerTabNavigator() {
         tabBarStyle: {
           backgroundColor: '#fbf9f4',
           borderTopColor: '#c3c8c1',
-          paddingTop: 8,
-          paddingBottom: Math.max(bottom, 14),
+          paddingTop: 6,
+          paddingBottom: Math.max(bottom, 12),
+          height: undefined,
         },
         tabBarLabel: ({ color, focused }) => (
-          <Text
-            style={{ color }}
-            className={`font-body-semibold text-[11px] ${focused ? '' : 'opacity-80'}`}
-          >
-            {tabLabels[route.name]}
-          </Text>
+          <View className="items-center">
+            <Text
+              style={{ color }}
+              className={`font-body-semibold text-[10px] ${focused ? 'opacity-100' : 'opacity-70'}`}
+            >
+              {tabLabels[route.name]}
+            </Text>
+            {focused && (
+              <View className="mt-1 h-1 w-1 rounded-full bg-primary" />
+            )}
+          </View>
         ),
-        tabBarIcon: ({ color }) => (
-          <View>
-            <Icon name={tabIcons[route.name]} size={24} color={color} />
+        tabBarIcon: ({ color, focused }) => (
+          <View className="items-center">
+            <Icon name={tabIcons[route.name]} size={22} color={color} />
             {route.name === 'Cart' && cartCount > 0 && (
               <View className="absolute -right-2 -top-1 h-4 min-w-4 items-center justify-center rounded-full bg-error px-1">
                 <Text className="font-body-semibold text-[9px] text-on-error">{cartCount}</Text>

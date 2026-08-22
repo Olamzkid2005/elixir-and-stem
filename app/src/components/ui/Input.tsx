@@ -16,13 +16,13 @@ export function Input({ label, icon, error, className, rightSlot, ...props }: In
   return (
     <View className={cn('gap-2', className)}>
       {label && (
-        <Text className="font-body-semibold text-xs uppercase tracking-widest text-on-surface-variant">
+        <Text className="font-body-semibold text-[10px] uppercase tracking-widest text-on-surface-variant">
           {label}
         </Text>
       )}
       <View
         className={cn(
-          'h-14 flex-row items-center gap-3 rounded-xl border bg-surface-container-lowest px-4',
+          'h-14 flex-row items-center gap-3 rounded-2xl border-2 bg-surface-container-lowest px-4',
           error ? 'border-error' : 'border-outline-variant'
         )}
       >
@@ -34,7 +34,12 @@ export function Input({ label, icon, error, className, rightSlot, ...props }: In
         />
         {rightSlot}
       </View>
-      {error && <Text className="font-body text-xs text-error">{error}</Text>}
+      {error && (
+        <View className="flex-row items-center gap-1">
+          <Icon name="error" size={14} color="#ba1a1a" />
+          <Text className="font-body text-xs text-error">{error}</Text>
+        </View>
+      )}
     </View>
   );
 }

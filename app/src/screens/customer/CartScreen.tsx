@@ -35,23 +35,37 @@ export function CartScreen() {
 
         <View className="mt-4 px-4">
           {items.length === 0 && (
-            <View className="items-center rounded-2xl bg-surface-container-lowest py-12">
-              <Icon name="shopping_bag" size={40} color="#c3c8c1" />
-              <Text className="mt-3 font-body text-sm text-on-surface-variant">
-                Your cart is empty.
+            <View className="items-center rounded-3xl bg-surface-container-lowest py-16 shadow-elevation-1" style={{ elevation: 1 }}>
+              <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-surface-container">
+                <Icon name="shopping_bag" size={40} color="#c3c8c1" />
+              </View>
+              <Text className="font-body-semibold text-base text-on-surface">
+                Your cart is empty
               </Text>
+              <Text className="mt-1 font-body text-sm text-on-surface-variant">
+                Browse our menu to find something you'll love
+              </Text>
+              <Button
+                label="Browse Menu"
+                icon="search"
+                variant="secondary"
+                size="sm"
+                className="mt-4"
+                onPress={() => navigation.navigate('CustomerTabs', { screen: 'Browse' })}
+              />
             </View>
           )}
 
           {items.map((item) => (
             <View
               key={`${item.product.id}-${item.weight.label}`}
-              className="mb-3 flex-row gap-3 rounded-2xl bg-surface-container-lowest p-3"
+              className="mb-3 flex-row gap-3 rounded-3xl bg-surface-container-lowest p-3 shadow-elevation-1"
+              style={{ elevation: 1 }}
             >
-              <ProductImage imageUrl={item.product.imageUrl} color={item.product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
+              <ProductImage imageUrl={item.product.imageUrl} color={item.product.imageColor} className="h-20 w-20 rounded-2xl" iconSize={28} />
               <View className="flex-1">
                 <View className="flex-row items-start justify-between">
-                  <View>
+                  <View className="flex-1">
                     <Badge
                       variant="outline"
                       label={
@@ -60,18 +74,19 @@ export function CartScreen() {
                             item.product.strainType.slice(1)
                           : item.product.category
                       }
-                      className="mb-1 px-2 py-0.5"
+                      className="mb-1 self-start px-2 py-0.5"
                     />
                     <Text className="font-headline text-base text-on-surface">
                       {item.product.name}
                     </Text>
                     <Text className="font-body text-xs text-on-surface-variant">
-                      {item.weight.label} • {item.product.brand}
+                      {item.weight.label} · {item.product.brand}
                     </Text>
                   </View>
                   <Pressable
                     hitSlop={8}
                     onPress={() => remove(item.product.id, item.weight.label)}
+                    className="h-8 w-8 items-center justify-center rounded-full bg-surface-container"
                   >
                     <Icon name="close" size={18} color="#737973" />
                   </Pressable>
@@ -100,14 +115,20 @@ export function CartScreen() {
               <Pressable
                 onPress={() => setDeliveryMode('asap')}
                 className={cn(
-                  'flex-row items-center justify-between rounded-2xl border p-4',
+                  'flex-row items-center justify-between rounded-3xl border-2 p-4',
                   deliveryMode === 'asap'
-                    ? 'border-primary bg-surface-container-lowest'
+                    ? 'border-primary bg-surface-container-lowest shadow-elevation-1'
                     : 'border-outline-variant bg-surface-container-lowest'
                 )}
+                style={{ elevation: deliveryMode === 'asap' ? 1 : 0 }}
               >
                 <View className="flex-row items-center gap-3">
-                  <Icon name="local_shipping" size={22} color="#1b1c19" />
+                  <View className={cn(
+                    'h-11 w-11 items-center justify-center rounded-2xl',
+                    deliveryMode === 'asap' ? 'bg-primary' : 'bg-surface-container'
+                  )}>
+                    <Icon name="local_shipping" size={20} color={deliveryMode === 'asap' ? '#ffffff' : '#1b1c19'} />
+                  </View>
                   <View>
                     <Text className="font-body-semibold text-base text-on-surface">
                       Standard Delivery
@@ -130,14 +151,20 @@ export function CartScreen() {
               <Pressable
                 onPress={() => setDeliveryMode('scheduled')}
                 className={cn(
-                  'flex-row items-center justify-between rounded-2xl border p-4',
+                  'flex-row items-center justify-between rounded-3xl border-2 p-4',
                   deliveryMode === 'scheduled'
-                    ? 'border-primary bg-surface-container-lowest'
+                    ? 'border-primary bg-surface-container-lowest shadow-elevation-1'
                     : 'border-outline-variant bg-surface-container-lowest'
                 )}
+                style={{ elevation: deliveryMode === 'scheduled' ? 1 : 0 }}
               >
                 <View className="flex-row items-center gap-3">
-                  <Icon name="calendar_today" size={22} color="#1b1c19" />
+                  <View className={cn(
+                    'h-11 w-11 items-center justify-center rounded-2xl',
+                    deliveryMode === 'scheduled' ? 'bg-primary' : 'bg-surface-container'
+                  )}>
+                    <Icon name="calendar_today" size={20} color={deliveryMode === 'scheduled' ? '#ffffff' : '#1b1c19'} />
+                  </View>
                   <View>
                     <Text className="font-body-semibold text-base text-on-surface">
                       Schedule for Later
@@ -157,12 +184,15 @@ export function CartScreen() {
 
             {/* Order summary */}
             <SectionTitle title="Order Summary" className="mt-2" />
-            <View className="mx-4 gap-2 rounded-2xl bg-surface-container-lowest p-4">
-              <SummaryRow label="Subtotal" value={formatPrice(subtotal())} />
-              <SummaryRow label="Estimated Tax" value={formatPrice(tax())} />
-              <SummaryRow label="Delivery Fee" value={formatPrice(DELIVERY_FEE)} />
-              <View className="my-1 h-px bg-outline-variant" />
-              <SummaryRow label="Total" value={formatPrice(total())} bold />
+            <View className="mx-4 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1" style={{ elevation: 1 }}>
+              <View className="h-1 bg-primary/20" />
+              <View className="gap-2 p-4">
+                <SummaryRow label="Subtotal" value={formatPrice(subtotal())} />
+                <SummaryRow label="Estimated Tax" value={formatPrice(tax())} />
+                <SummaryRow label="Delivery Fee" value={formatPrice(DELIVERY_FEE)} />
+                <View className="my-1 h-px bg-outline-variant" />
+                <SummaryRow label="Total" value={formatPrice(total())} bold />
+              </View>
             </View>
 
             <View className="mb-8 mt-5 px-4">

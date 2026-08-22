@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -23,6 +23,26 @@ export function SignInScreen({ navigation }: Props) {
   const { signIn, role } = useAuth();
   const { signInWithGoogle, signInWithApple, loading: oauthLoading, error: oauthError } = useOAuth();
 
+  // Entrance animation
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(15)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   const validate = () => {
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Enter a valid email address.';
     if (password.length < 8) return 'Password must be at least 8 characters.';
@@ -39,7 +59,6 @@ export function SignInScreen({ navigation }: Props) {
       if (mode === 'signup' && role === 'merchant') {
         navigation.navigate('MerchantOnboarding');
       }
-      // Customer flow: RootNavigator swaps to tabs automatically once user is set.
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign in failed. Please retry.');
     } finally {
@@ -58,27 +77,39 @@ export function SignInScreen({ navigation }: Props) {
             <Pressable
               onPress={() => navigation.goBack()}
               hitSlop={12}
-              className="h-11 w-11 items-center justify-center"
+              className="h-11 w-11 items-center justify-center rounded-full active:bg-surface-container-high"
             >
               <Icon name="arrow_back" size={24} color="#1b1c19" />
             </Pressable>
           </View>
 
-          <View className="px-6 pt-4">
-            <Text className="mb-8 text-center font-headline-bold text-sm uppercase tracking-[0.2em] text-primary">
-              Elixir &amp; Stem
-            </Text>
+          <Animated.View
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            }}
+            className="px-6 pt-4"
+          >
+            {/* Brand wordmark */}
+            <View className="flex-row items-center justify-center gap-2">
+              <View className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <Text className="text-center font-headline-bold text-sm uppercase tracking-[0.2em] text-primary">
+                Elixir &amp; Stem
+              </Text>
+              <View className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </View>
 
             {/* Tab toggle */}
-            <View className="mb-8 flex-row rounded-full bg-surface-container p-1">
+            <View className="mb-8 mt-8 flex-row rounded-full bg-surface-container p-1">
               {(['signin', 'signup'] as const).map((m) => (
                 <Pressable
                   key={m}
                   onPress={() => setMode(m)}
                   className={cn(
                     'flex-1 items-center rounded-full py-2.5',
-                    mode === m && 'bg-surface-container-lowest'
+                    mode === m && 'bg-surface-container-lowest shadow-elevation-1'
                   )}
+                  style={{ elevation: mode === m ? 1 : 0 }}
                 >
                   <Text
                     className={cn(
@@ -123,7 +154,7 @@ export function SignInScreen({ navigation }: Props) {
               error={error}
               rightSlot={
                 <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
-                  <Icon name="visibility_off" size={20} color="#737973" />
+                  <Icon name={showPassword ? 'visibility_off' : 'visibility_off'} size={20} color="#737973" />
                 </Pressable>
               }
             />
@@ -178,7 +209,7 @@ export function SignInScreen({ navigation }: Props) {
               <Text className="font-body-semibold text-secondary">Terms of Service</Text> and{' '}
               <Text className="font-body-semibold text-secondary">Privacy Policy</Text>.
             </Text>
-          </View>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

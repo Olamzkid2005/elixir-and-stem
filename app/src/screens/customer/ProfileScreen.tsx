@@ -41,61 +41,90 @@ export function ProfileScreen() {
     <Screen>
       <AppHeader />
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Member card */}
-        <View className="mx-4 mt-2 rounded-2xl bg-primary p-5">
-          <View className="flex-row items-center gap-4">
-            <View className="h-16 w-16 items-center justify-center rounded-full bg-primary-container">
-              <Icon name="person" size={30} color="#d0e9d4" />
+        {/* Member card — premium dark with decorative elements */}
+        <View className="mx-4 mt-2 overflow-hidden rounded-3xl bg-primary shadow-elevation-3" style={{ elevation: 3 }}>
+          {/* Decorative circles */}
+          <View
+            style={{
+              position: 'absolute',
+              top: -30,
+              right: -20,
+              width: 120,
+              height: 120,
+              borderRadius: 60,
+              backgroundColor: 'rgba(77,100,75,0.2)',
+            }}
+          />
+          <View
+            style={{
+              position: 'absolute',
+              bottom: -15,
+              left: 30,
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: 'rgba(233,193,118,0.08)',
+            }}
+          />
+
+          <View className="p-5">
+            <View className="flex-row items-center gap-4">
+              <View className="h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                <Icon name="person" size={30} color="#cfeaca" />
+              </View>
+              <View className="flex-1">
+                <Text className="font-headline text-2xl text-on-primary">
+                  {user?.name ?? 'Julian Reed'}
+                </Text>
+                <Text className="font-body text-sm text-on-primary-container">
+                  {TIER_LABELS[tier]} Member
+                </Text>
+              </View>
             </View>
-            <View className="flex-1">
-              <Text className="font-headline text-2xl text-on-primary">
-                {user?.name ?? 'Julian Reed'}
-              </Text>
-              <Text className="font-body text-sm text-on-primary-container">
-                {TIER_LABELS[tier]} Member
+            <View className="mt-4 flex-row items-center gap-2 rounded-full bg-primary-container px-4 py-2.5">
+              <Icon name="stars" size={18} color="#e9c176" />
+              <Text className="font-body-semibold text-base text-tertiary-fixed-dim">
+                {points} Points
               </Text>
             </View>
-          </View>
-          <View className="mt-4 flex-row items-center gap-2 rounded-full bg-primary-container px-4 py-2.5">
-            <Icon name="stars" size={18} color="#e9c176" />
-            <Text className="font-body-semibold text-base text-tertiary-fixed-dim">
-              {points} Points
-            </Text>
           </View>
         </View>
 
         {/* Loyalty tier progress */}
         <SectionTitle title="Rewards & Tiers" />
-        <View className="mx-4 rounded-2xl bg-surface-container-lowest p-4">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-body text-sm text-on-surface-variant">Current Tier</Text>
-            <Text className="font-body-semibold text-base text-on-surface">
-              {TIER_LABELS[tier]}
-            </Text>
+        <View className="mx-4 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1" style={{ elevation: 1 }}>
+          <View className="h-1 bg-primary/20" />
+          <View className="p-4">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-body text-sm text-on-surface-variant">Current Tier</Text>
+              <Text className="font-body-semibold text-base text-on-surface">
+                {TIER_LABELS[tier]}
+              </Text>
+            </View>
+            {nextTierPoints && (
+              <>
+                <View className="mt-3 flex-row items-center justify-between">
+                  <Text className="font-body text-sm text-on-surface-variant">
+                    Next Tier: {tier === 'bronze' ? 'Silver' : 'Gold'}
+                  </Text>
+                  <Text className="font-body-semibold text-sm text-secondary">
+                    {nextTierPoints - points} pts away
+                  </Text>
+                </View>
+                <View className="mt-2 h-2.5 overflow-hidden rounded-full bg-surface-container">
+                  <View
+                    className="h-full rounded-full bg-gradient-to-r from-primary to-secondary"
+                    style={{ width: `${Math.max(5, progress * 100)}%` }}
+                  />
+                </View>
+              </>
+            )}
+            {!nextTierPoints && (
+              <Text className="mt-2 font-body text-xs text-on-surface-variant">
+                You've reached the highest tier! 🎉
+              </Text>
+            )}
           </View>
-          {nextTierPoints && (
-            <>
-              <View className="mt-3 flex-row items-center justify-between">
-                <Text className="font-body text-sm text-on-surface-variant">
-                  Next Tier: {tier === 'bronze' ? 'Silver' : 'Gold'}
-                </Text>
-                <Text className="font-body-semibold text-sm text-secondary">
-                  {nextTierPoints - points} pts away
-                </Text>
-              </View>
-              <View className="mt-2 h-2 overflow-hidden rounded-full bg-surface-container">
-                <View
-                  className="h-full rounded-full bg-tertiary-fixed-dim"
-                  style={{ width: `${Math.max(5, progress * 100)}%` }}
-                />
-              </View>
-            </>
-          )}
-          {!nextTierPoints && (
-            <Text className="mt-2 font-body text-xs text-on-surface-variant">
-              You've reached the highest tier! 🎉
-            </Text>
-          )}
         </View>
 
         {/* Quick actions */}
@@ -103,9 +132,10 @@ export function ProfileScreen() {
           {/* Favorites */}
           <Pressable
             onPress={() => navigation.navigate('Favorites')}
-            className="flex-row items-center gap-4 rounded-2xl bg-surface-container-lowest p-4 active:bg-surface-container"
+            className="flex-row items-center gap-4 rounded-3xl bg-surface-container-lowest p-4 shadow-elevation-1 active:bg-surface-container"
+            style={{ elevation: 1 }}
           >
-            <View className="h-12 w-12 items-center justify-center rounded-full bg-error-container">
+            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-error-container">
               <Icon name="favorite" size={22} color="#ba1a1a" />
             </View>
             <View className="flex-1">
@@ -120,9 +150,10 @@ export function ProfileScreen() {
           {/* Rewards */}
           <Pressable
             onPress={() => navigation.navigate('Rewards')}
-            className="flex-row items-center gap-4 rounded-2xl bg-surface-container-lowest p-4 active:bg-surface-container"
+            className="flex-row items-center gap-4 rounded-3xl bg-surface-container-lowest p-4 shadow-elevation-1 active:bg-surface-container"
+            style={{ elevation: 1 }}
           >
-            <View className="h-12 w-12 items-center justify-center rounded-full bg-tertiary-fixed">
+            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-tertiary-fixed">
               <Icon name="card_giftcard" size={22} color="#211500" />
             </View>
             <View className="flex-1">
@@ -143,9 +174,10 @@ export function ProfileScreen() {
           {orders.slice(0, 3).map((o) => (
             <View
               key={o.id}
-              className="flex-row items-center gap-4 rounded-2xl bg-surface-container-lowest p-4"
+              className="flex-row items-center gap-4 rounded-3xl bg-surface-container-lowest p-4 shadow-elevation-1"
+              style={{ elevation: 1 }}
             >
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-surface-container">
+              <View className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-container">
                 <Icon name="receipt_long" size={22} color="#4d644b" />
               </View>
               <View className="flex-1">
@@ -181,7 +213,6 @@ export function ProfileScreen() {
             onPress={async () => {
               setTestingNotification(true);
               try {
-                // Use local notification in Expo Go, backend endpoint in dev build
                 if (Constants.executionEnvironment === 'storeClient') {
                   await sendLocalTestNotification();
                   Alert.alert('Local Notification Sent!', 'This is a local notification (Expo Go). For remote push, use a development build.');

@@ -7,7 +7,7 @@ type Variant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | '
 type Size = 'default' | 'sm' | 'lg' | 'icon';
 
 const variantClasses: Record<Variant, string> = {
-  default: 'bg-primary active:bg-primary-container',
+  default: 'bg-primary active:opacity-90',
   secondary: 'bg-secondary-container active:bg-primary-fixed',
   outline: 'border border-outline-variant bg-transparent active:bg-surface-container',
   ghost: 'bg-transparent active:bg-surface-container',
@@ -77,6 +77,12 @@ export function Button({
         (disabled || loading) && 'opacity-50',
         className
       )}
+      style={{
+        // Subtle shadow for default (filled) buttons
+        ...(variant === 'default' || variant === 'destructive' || variant === 'gold'
+          ? { shadowColor: '#061b0e', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 2 }
+          : {}),
+      }}
       {...props}
     >
       {loading ? (

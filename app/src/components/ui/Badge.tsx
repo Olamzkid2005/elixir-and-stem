@@ -32,7 +32,7 @@ export function Badge({
       {...props}
     >
       <Text
-        className={cn('font-body-semibold text-xs uppercase tracking-wider', textClasses[variant])}
+        className={cn('font-body-semibold text-[10px] uppercase tracking-wider', textClasses[variant])}
       >
         {label}
       </Text>

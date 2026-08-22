@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cn } from '@/lib/utils';
 
@@ -20,7 +20,7 @@ export function Screen({
   );
 }
 
-/** Centered headline (Playfair Display). */
+/** Centered headline (Playfair Display) with decorative accent. */
 export function Headline({
   children,
   size = 'lg',
@@ -32,35 +32,17 @@ export function Headline({
 }) {
   return (
     <View>
-      <RNText size={size} className={className}>
+      <Text
+        className={cn(
+          'font-headline text-on-surface',
+          size === 'xl' && 'text-4xl leading-[44px]',
+          size === 'lg' && 'text-[28px] leading-9',
+          size === 'md' && 'text-2xl leading-8',
+          className
+        )}
+      >
         {children}
-      </RNText>
+      </Text>
     </View>
-  );
-}
-
-import { Text } from 'react-native';
-
-function RNText({
-  children,
-  size,
-  className,
-}: {
-  children: React.ReactNode;
-  size: 'md' | 'lg' | 'xl';
-  className?: string;
-}) {
-  return (
-    <Text
-      className={cn(
-        'font-headline text-on-surface',
-        size === 'xl' && 'text-4xl leading-[44px]',
-        size === 'lg' && 'text-[28px] leading-9',
-        size === 'md' && 'text-2xl leading-8',
-        className
-      )}
-    >
-      {children}
-    </Text>
   );
 }

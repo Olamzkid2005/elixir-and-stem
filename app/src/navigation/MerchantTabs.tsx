@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,15 +42,23 @@ function MerchantTabNavigator() {
         tabBarStyle: {
           backgroundColor: '#fbf9f4',
           borderTopColor: '#c3c8c1',
-          paddingTop: 8,
-          paddingBottom: Math.max(bottom, 14),
+          paddingTop: 6,
+          paddingBottom: Math.max(bottom, 12),
         },
-        tabBarLabel: ({ color }) => (
-          <Text style={{ color }} className="font-body-semibold text-[11px]">
-            {tabLabels[route.name]}
-          </Text>
+        tabBarLabel: ({ color, focused }) => (
+          <View className="items-center">
+            <Text
+              style={{ color }}
+              className={`font-body-semibold text-[10px] ${focused ? 'opacity-100' : 'opacity-70'}`}
+            >
+              {tabLabels[route.name]}
+            </Text>
+            {focused && (
+              <View className="mt-1 h-1 w-1 rounded-full bg-primary" />
+            )}
+          </View>
         ),
-        tabBarIcon: ({ color }) => <Icon name={tabIcons[route.name]} size={24} color={color} />,
+        tabBarIcon: ({ color }) => <Icon name={tabIcons[route.name]} size={22} color={color} />,
       })}
     >
       <Tab.Screen name="Dashboard" component={MerchantDashboardScreen} />

@@ -105,14 +105,20 @@ export function CheckoutScreen({ navigation }: Props) {
           <Pressable
             onPress={() => setDeliveryMode('asap')}
             className={cn(
-              'flex-row items-center justify-between rounded-2xl border p-4',
+              'flex-row items-center justify-between rounded-3xl border-2 p-4',
               deliveryMode === 'asap'
-                ? 'border-primary bg-surface-container-lowest'
+                ? 'border-primary bg-surface-container-lowest shadow-elevation-1'
                 : 'border-outline-variant bg-surface-container-lowest'
             )}
+            style={{ elevation: deliveryMode === 'asap' ? 1 : 0 }}
           >
             <View className="flex-row items-center gap-3">
-              <Icon name="local_shipping" size={22} color="#1b1c19" />
+              <View className={cn(
+                'h-11 w-11 items-center justify-center rounded-2xl',
+                deliveryMode === 'asap' ? 'bg-primary' : 'bg-surface-container'
+              )}>
+                <Icon name="local_shipping" size={20} color={deliveryMode === 'asap' ? '#ffffff' : '#1b1c19'} />
+              </View>
               <View>
                 <Text className="font-body-semibold text-base text-on-surface">
                   As Soon as Possible
@@ -132,14 +138,20 @@ export function CheckoutScreen({ navigation }: Props) {
           <Pressable
             onPress={() => setDeliveryMode('scheduled')}
             className={cn(
-              'flex-row items-center justify-between rounded-2xl border p-4',
+              'flex-row items-center justify-between rounded-3xl border-2 p-4',
               deliveryMode === 'scheduled'
-                ? 'border-primary bg-surface-container-lowest'
+                ? 'border-primary bg-surface-container-lowest shadow-elevation-1'
                 : 'border-outline-variant bg-surface-container-lowest'
             )}
+            style={{ elevation: deliveryMode === 'scheduled' ? 1 : 0 }}
           >
             <View className="flex-row items-center gap-3">
-              <Icon name="calendar_today" size={22} color="#1b1c19" />
+              <View className={cn(
+                'h-11 w-11 items-center justify-center rounded-2xl',
+                deliveryMode === 'scheduled' ? 'bg-primary' : 'bg-surface-container'
+              )}>
+                <Icon name="calendar_today" size={20} color={deliveryMode === 'scheduled' ? '#ffffff' : '#1b1c19'} />
+              </View>
               <View>
                 <Text className="font-body-semibold text-base text-on-surface">
                   Schedule for Later
@@ -181,17 +193,20 @@ export function CheckoutScreen({ navigation }: Props) {
 
         {/* Payment Method */}
         <SectionTitle title="Payment Method" className="px-0" />
-        <View className="flex-row items-center gap-3 rounded-2xl border border-primary bg-surface-container-lowest p-4">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-secondary-container">
-            <Icon name="local_shipping" size={20} color="#4d644b" />
+        <View className="overflow-hidden rounded-3xl border-2 border-primary bg-surface-container-lowest shadow-elevation-1" style={{ elevation: 1 }}>
+          <View className="h-1 bg-primary" />
+          <View className="flex-row items-center gap-3 p-4">
+            <View className="h-11 w-11 items-center justify-center rounded-2xl bg-primary">
+              <Icon name="local_shipping" size={20} color="#ffffff" />
+            </View>
+            <View className="flex-1">
+              <Text className="font-body-semibold text-base text-on-surface">Pay on Delivery</Text>
+              <Text className="font-body text-xs text-on-surface-variant">
+                Cash or card when your order arrives. ID check required at handoff.
+              </Text>
+            </View>
+            <Icon name="check_circle" size={22} color="#061b0e" />
           </View>
-          <View className="flex-1">
-            <Text className="font-body-semibold text-base text-on-surface">Pay on Delivery</Text>
-            <Text className="font-body text-xs text-on-surface-variant">
-              Cash or card when your order arrives. ID check required at handoff.
-            </Text>
-          </View>
-          <Icon name="check_circle" size={22} color="#061b0e" />
         </View>
         <Text className="mt-2 font-body text-xs text-on-surface-variant">
           Online payment processing arrives in a later phase — pay-on-delivery only for now.
@@ -204,13 +219,14 @@ export function CheckoutScreen({ navigation }: Props) {
             <Pressable
               onPress={() => setUsePoints(!usePoints)}
               className={cn(
-                'flex-row items-center gap-3 rounded-2xl border p-4',
+                'flex-row items-center gap-3 rounded-3xl border-2 p-4',
                 usePoints
-                  ? 'border-primary bg-surface-container-lowest'
+                  ? 'border-primary bg-surface-container-lowest shadow-elevation-1'
                   : 'border-outline-variant bg-surface-container-lowest'
               )}
+              style={{ elevation: usePoints ? 1 : 0 }}
             >
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-tertiary-fixed">
+              <View className="h-11 w-11 items-center justify-center rounded-2xl bg-tertiary-fixed">
                 <Icon name="card_giftcard" size={20} color="#211500" />
               </View>
               <View className="flex-1">
@@ -232,17 +248,20 @@ export function CheckoutScreen({ navigation }: Props) {
 
         {/* Order Summary */}
         <SectionTitle title="Order Summary" className="px-0" />
-        <View className="mb-6 gap-2 rounded-2xl bg-surface-container p-4">
-          <SummaryRow label="Subtotal" value={formatPrice(subtotal())} />
-          <SummaryRow label="VAT (7.5%)" value={formatPrice(Math.round(subtotal() * 0.075))} />
-          <SummaryRow label="State Levy (2.5%)" value={formatPrice(Math.round(subtotal() * 0.025))} />
-          <SummaryRow
-            label="Delivery Fee"
-            value={usePoints ? 'FREE' : formatPrice(DELIVERY_FEE)}
-            strikethrough={usePoints}
-          />
-          <View className="my-1 h-px bg-outline-variant" />
-          <SummaryRow label="Total due on delivery" value={formatPrice(finalTotal)} bold />
+        <View className="mb-6 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1" style={{ elevation: 1 }}>
+          <View className="h-1 bg-primary/20" />
+          <View className="gap-2 p-4">
+            <SummaryRow label="Subtotal" value={formatPrice(subtotal())} />
+            <SummaryRow label="VAT (7.5%)" value={formatPrice(Math.round(subtotal() * 0.075))} />
+            <SummaryRow label="State Levy (2.5%)" value={formatPrice(Math.round(subtotal() * 0.025))} />
+            <SummaryRow
+              label="Delivery Fee"
+              value={usePoints ? 'FREE' : formatPrice(DELIVERY_FEE)}
+              strikethrough={usePoints}
+            />
+            <View className="my-1 h-px bg-outline-variant" />
+            <SummaryRow label="Total due on delivery" value={formatPrice(finalTotal)} bold />
+          </View>
         </View>
 
         <Button

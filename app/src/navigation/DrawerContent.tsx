@@ -22,11 +22,15 @@ function DrawerItem({ icon, label, badge, onPress, active }: DrawerItemProps) {
   return (
     <Pressable
       onPress={onPress}
-      className={`mb-1 flex-row items-center gap-3 rounded-xl px-4 py-3 ${
+      className={`mb-1 flex-row items-center gap-3 rounded-2xl px-4 py-3 ${
         active ? 'bg-primary-container' : 'active:bg-surface-container'
       }`}
     >
-      <Icon name={icon} size={22} color={active ? '#061b0e' : '#4d644b'} />
+      <View className={`h-9 w-9 items-center justify-center rounded-xl ${
+        active ? 'bg-primary' : 'bg-surface-container'
+      }`}>
+        <Icon name={icon} size={20} color={active ? '#ffffff' : '#4d644b'} />
+      </View>
       <Text
         className={`flex-1 text-[15px] ${
           active ? 'font-headline text-primary' : 'font-body-semibold text-on-surface'
@@ -62,11 +66,12 @@ export function DrawerContent(props: any) {
       contentContainerStyle={{ flex: 1, paddingTop: 0 }}
       style={{ backgroundColor: '#fbf9f4' }}
     >
-      {/* Profile header */}
-      <View className="mx-4 mt-12 mb-2 rounded-2xl bg-surface-container-lowest p-4">
-        <View className="flex-row items-center gap-3">
-          <View className="h-12 w-12 items-center justify-center rounded-full bg-primary-container">
-            <Icon name="person" size={24} color="#061b0e" />
+      {/* Profile header — premium card */}
+      <View className="mx-4 mt-12 mb-2 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1" style={{ elevation: 1 }}>
+        <View className="h-1 bg-primary/20" />
+        <View className="flex-row items-center gap-3 p-4">
+          <View className="h-12 w-12 items-center justify-center rounded-2xl bg-primary">
+            <Icon name="person" size={22} color="#ffffff" />
           </View>
           <View className="flex-1">
             <Text className="font-headline text-base text-on-surface">

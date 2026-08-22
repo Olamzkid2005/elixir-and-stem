@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, Headline } from '@/components/ui/Screen';
 import { AppHeader } from '@/components/AppHeader';
+import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { ProductImage } from '@/components/ProductImage';
 import { Badge } from '@/components/ui/Badge';
@@ -33,15 +34,23 @@ export function FavoritesScreen() {
 
         {favorites.length === 0 && !loading && (
           <View className="flex-1 items-center justify-center pb-20">
-            <View className="mb-4 h-16 w-16 items-center justify-center rounded-full bg-surface-container">
-              <Icon name="favorite_border" size={32} color="#c3c8c1" />
+            <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-surface-container">
+              <Icon name="favorite_border" size={36} color="#c3c8c1" />
             </View>
-            <Text className="font-body text-base text-on-surface-variant">
+            <Text className="font-body-semibold text-base text-on-surface">
               No favorites yet
             </Text>
-            <Text className="mt-1 font-body text-sm text-on-surface-variant">
+            <Text className="mt-1 text-center font-body text-sm text-on-surface-variant">
               Tap the heart on any product to save it here
             </Text>
+            <Button
+              label="Browse Menu"
+              icon="search"
+              variant="secondary"
+              size="sm"
+              className="mt-4"
+              onPress={() => navigation.navigate('CustomerTabs', { screen: 'Browse' })}
+            />
           </View>
         )}
 
@@ -50,7 +59,8 @@ export function FavoritesScreen() {
             <Pressable
               key={product.id}
               onPress={() => navigation.navigate('ProductDetail', { product })}
-              className="w-[calc(50%-6px)] rounded-2xl bg-surface-container-lowest overflow-hidden"
+              className="w-[calc(50%-6px)] overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1"
+              style={{ elevation: 1 }}
             >
               <View className="relative">
                 <ProductImage

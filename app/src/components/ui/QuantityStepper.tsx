@@ -20,26 +20,26 @@ export function QuantityStepper({
   return (
     <View
       className={cn(
-        'flex-row items-center gap-4 rounded-full bg-surface-container px-2 py-1.5',
+        'flex-row items-center gap-3 rounded-full bg-surface-container px-1.5 py-1.5',
         className
       )}
     >
       <Pressable
         onPress={() => onChange(Math.max(min, value - 1))}
         hitSlop={8}
-        className="h-8 w-8 items-center justify-center rounded-full bg-surface-container-lowest"
+        className="h-8 w-8 items-center justify-center rounded-full bg-surface-container-lowest active:bg-surface-container-high"
       >
         <Icon name="remove" size={18} color="#1b1c19" />
       </Pressable>
-      <Text className="min-w-[20px] text-center font-body-semibold text-base text-on-surface">
+      <Text className="min-w-[24px] text-center font-body-semibold text-base text-on-surface">
         {value}
       </Text>
       <Pressable
         onPress={() => onChange(Math.min(max, value + 1))}
         hitSlop={8}
-        className="h-8 w-8 items-center justify-center rounded-full bg-surface-container-lowest"
+        className="h-8 w-8 items-center justify-center rounded-full bg-primary active:opacity-80"
       >
-        <Icon name="add" size={18} color="#1b1c19" />
+        <Icon name="add" size={18} color="#ffffff" />
       </Pressable>
     </View>
   );

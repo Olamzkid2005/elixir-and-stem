@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Screen, Headline } from '@/components/ui/Screen';
@@ -64,8 +64,9 @@ export function BrowseScreen() {
               onPress={() => setMode(m)}
               className={cn(
                 'h-9 w-9 items-center justify-center rounded-full',
-                mode === m && 'bg-surface-container-lowest'
+                mode === m && 'bg-surface-container-lowest shadow-elevation-1'
               )}
+              style={{ elevation: mode === m ? 1 : 0 }}
             >
               <Icon name={m === 'list' ? 'list' : 'map'} size={18} color={mode === m ? '#061b0e' : '#737973'} />
             </Pressable>
@@ -75,10 +76,10 @@ export function BrowseScreen() {
 
       {/* Real Google Map */}
       {mode === 'map' && (
-        <View className="mx-4 mb-3 overflow-hidden rounded-2xl">
+        <View className="mx-4 mb-3 overflow-hidden rounded-3xl shadow-elevation-2" style={{ elevation: 2 }}>
           <MapView
             provider={PROVIDER_GOOGLE}
-            style={{ height: 260, width: '100%' }}
+            style={{ height: 280, width: '100%' }}
             region={mapRegion}
             onRegionChangeComplete={setMapRegion}
             showsUserLocation={!!userLocation}
@@ -102,8 +103,8 @@ export function BrowseScreen() {
                   coordinate={{ latitude: m.lat, longitude: m.lng }}
                   onPress={() => setSelectedMerchant(m)}
                 >
-                  <View className="h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary shadow-md">
-                    <Icon name="storefront" size={16} color="#ffffff" />
+                  <View className="h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-primary shadow-elevation-3" style={{ elevation: 3 }}>
+                    <Icon name="storefront" size={18} color="#ffffff" />
                   </View>
                 </Marker>
               ))}
@@ -111,16 +112,19 @@ export function BrowseScreen() {
 
           {/* Merchant info card on marker tap */}
           {selectedMerchant && (
-            <View className="absolute bottom-0 left-0 right-0 border-t border-outline-variant bg-surface p-4 shadow-lg">
+            <View className="absolute bottom-0 left-0 right-0 border-t border-outline-variant/30 bg-surface p-4 shadow-elevation-4" style={{ elevation: 4 }}>
               <View className="flex-row items-start justify-between">
                 <View className="flex-1">
-                  <Text className="font-headline text-lg text-on-surface">
-                    {selectedMerchant.businessName}
-                  </Text>
-                  <Text className="mt-0.5 font-body text-sm text-on-surface-variant">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="font-headline text-lg text-on-surface">
+                      {selectedMerchant.businessName}
+                    </Text>
+                    <Badge variant="secondary" label="Licensed" className="px-2 py-0.5" />
+                  </View>
+                  <Text className="mt-1 font-body text-sm text-on-surface-variant">
                     {selectedMerchant.address}
                   </Text>
-                  <View className="mt-2 flex-row items-center gap-3">
+                  <View className="mt-2 flex-row items-center gap-4">
                     <View className="flex-row items-center gap-1">
                       <Icon name="star" size={14} color="#e9c176" />
                       <Text className="font-body-semibold text-xs text-on-surface">
@@ -147,7 +151,7 @@ export function BrowseScreen() {
             </View>
           )}
 
-          <View className="bg-surface-container p-2">
+          <View className="bg-surface-container p-2.5">
             <Text className="text-center font-body text-xs text-on-surface-variant">
               {merchants.length} dispensaries · Tap markers for details
             </Text>
@@ -157,26 +161,36 @@ export function BrowseScreen() {
 
       {/* Merchant list */}
       <View className="flex-1 px-4">
-        {merchants.map((m) => (
-          <View key={m.id} className="mb-3 rounded-2xl bg-surface-container-lowest p-4">
-            <View className="flex-row items-start justify-between">
-              <View className="flex-1">
-                <Text className="font-headline text-lg text-on-surface">{m.businessName}</Text>
-                <Text className="mt-0.5 font-body text-sm text-on-surface-variant">{m.address}</Text>
-                <View className="mt-2 flex-row items-center gap-3">
-                  <View className="flex-row items-center gap-1">
-                    <Icon name="star" size={14} color="#e9c176" />
-                    <Text className="font-body-semibold text-xs text-on-surface">{m.rating}</Text>
+        {merchants.map((m, i) => (
+          <View
+            key={m.id}
+            className="mb-3 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1"
+            style={{ elevation: 1 }}
+          >
+            {/* Accent top bar */}
+            <View className="h-1 bg-primary/20" />
+            <View className="p-4">
+              <View className="flex-row items-start justify-between">
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="font-headline text-lg text-on-surface">{m.businessName}</Text>
+                    <Badge variant="secondary" label="Licensed" className="px-2 py-0.5" />
                   </View>
-                  <View className="flex-row items-center gap-1">
-                    <Icon name="schedule" size={14} color="#737973" />
-                    <Text className="font-body text-xs text-on-surface-variant">
-                      {m.deliveryEtaMins[0]}–{m.deliveryEtaMins[1]} min
-                    </Text>
+                  <Text className="mt-1 font-body text-sm text-on-surface-variant">{m.address}</Text>
+                  <View className="mt-2 flex-row items-center gap-4">
+                    <View className="flex-row items-center gap-1">
+                      <Icon name="star" size={14} color="#e9c176" />
+                      <Text className="font-body-semibold text-xs text-on-surface">{m.rating}</Text>
+                    </View>
+                    <View className="flex-row items-center gap-1">
+                      <Icon name="schedule" size={14} color="#737973" />
+                      <Text className="font-body text-xs text-on-surface-variant">
+                        {m.deliveryEtaMins[0]}–{m.deliveryEtaMins[1]} min delivery
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>
-              <Badge variant="secondary" label="Licensed" />
             </View>
           </View>
         ))}

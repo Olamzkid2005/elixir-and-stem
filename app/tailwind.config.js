@@ -47,6 +47,8 @@ module.exports = {
         lg: '4px',
         xl: '8px',
         '2xl': '12px',
+        '3xl': '16px',
+        '4xl': '24px',
         full: '9999px',
       },
       fontFamily: {
@@ -54,6 +56,22 @@ module.exports = {
         'headline-bold': ['PlayfairDisplay_700Bold'],
         body: ['Inter_400Regular'],
         'body-semibold': ['Inter_600SemiBold'],
+      },
+      // Material Design elevation shadows
+      boxShadow: {
+        'elevation-1': '0 1px 3px rgba(6,27,14,0.08), 0 1px 2px rgba(6,27,14,0.06)',
+        'elevation-2': '0 3px 6px rgba(6,27,14,0.10), 0 2px 4px rgba(6,27,14,0.06)',
+        'elevation-3': '0 6px 12px rgba(6,27,14,0.10), 0 3px 6px rgba(6,27,14,0.06)',
+        'elevation-4': '0 10px 20px rgba(6,27,14,0.12), 0 4px 8px rgba(6,27,14,0.06)',
+        'elevation-5': '0 15px 30px rgba(6,27,14,0.14), 0 6px 10px rgba(6,27,14,0.06)',
+        'glow-green': '0 0 20px rgba(6,27,14,0.15)',
+        'glow-amber': '0 0 16px rgba(233,193,118,0.25)',
+      },
+      // Spacing scale additions
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
       },
     },
   },

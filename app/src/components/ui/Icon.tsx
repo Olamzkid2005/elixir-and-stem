@@ -66,6 +66,10 @@ const materialMap = {
   savings: 'savings',
   admin_panel_settings: 'admin-panel-settings',
   description: 'description',
+  // UI improvement icons
+  search_off: 'search-off',
+  history: 'history',
+  error: 'error',
 } as const;
 
 const communityMap = {
@@ -86,7 +90,7 @@ export function Icon({
   if (name in communityMap) {
     return (
       <MaterialCommunityIcons
-        name={communityMap[name as keyof typeof communityMap]}
+        name={communityMap[name as keyof typeof communityMap] as any}
         size={size}
         color={color}
       />

@@ -76,14 +76,30 @@ export function OrdersScreen() {
       <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
         <Headline className="mt-2">Your Orders</Headline>
         {loading && (
-          <Text className="mt-4 font-body text-sm text-on-surface-variant">Refreshing…</Text>
+          <View className="mt-4 flex-row items-center gap-2">
+            <View className="h-2 w-2 rounded-full bg-primary" />
+            <Text className="font-body text-sm text-on-surface-variant">Refreshing…</Text>
+          </View>
         )}
         {!loading && all.length === 0 && (
-          <View className="mt-6 items-center rounded-2xl bg-surface-container-lowest py-12">
-            <Icon name="receipt_long" size={40} color="#c3c8c1" />
-            <Text className="mt-3 font-body text-sm text-on-surface-variant">
-              No orders yet — your history will appear here.
+          <View className="mt-6 items-center rounded-3xl bg-surface-container-lowest py-16 shadow-elevation-1" style={{ elevation: 1 }}>
+            <View className="mb-4 h-20 w-20 items-center justify-center rounded-full bg-surface-container">
+              <Icon name="receipt_long" size={40} color="#c3c8c1" />
+            </View>
+            <Text className="font-body-semibold text-base text-on-surface">
+              No orders yet
             </Text>
+            <Text className="mt-1 text-center font-body text-sm text-on-surface-variant">
+              Your order history will appear here
+            </Text>
+            <Button
+              label="Start Shopping"
+              icon="search"
+              variant="secondary"
+              size="sm"
+              className="mt-4"
+              onPress={() => navigation.navigate('CustomerTabs', { screen: 'Browse' })}
+            />
           </View>
         )}
         <View className="mt-4 pb-8">
@@ -91,56 +107,63 @@ export function OrdersScreen() {
             <Pressable
               key={o.id}
               onPress={() => navigation.navigate('OrderTracking', { orderId: o.id })}
-              className="mb-3 rounded-2xl bg-surface-container-lowest p-4 active:bg-surface-container"
+              className="mb-3 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-1 active:bg-surface-container"
+              style={{ elevation: 1 }}
             >
-              <View className="flex-row items-center gap-4">
-                <View className="h-12 w-12 items-center justify-center rounded-full bg-surface-container">
-                  <Icon name="receipt_long" size={22} color="#4d644b" />
+              {/* Active order accent bar */}
+              {o.status !== 'delivered' && o.status !== 'rejected' && (
+                <View className="h-1 bg-primary" />
+              )}
+              <View className="p-4">
+                <View className="flex-row items-center gap-4">
+                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-container">
+                    <Icon name="receipt_long" size={22} color="#4d644b" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-body-semibold text-base text-on-surface">
+                      Order #{o.id}
+                    </Text>
+                    <Text className="font-body text-xs text-on-surface-variant">
+                      {new Date(o.createdAt).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}{' '}
+                      • {o.merchantName}
+                    </Text>
+                  </View>
+                  <View className="items-end gap-1">
+                    <Text className="font-body-semibold text-base text-on-surface">
+                      {formatPrice(o.total)}
+                    </Text>
+                    <Badge variant={statusVariant[o.status]} label={statusLabel[o.status]} />
+                  </View>
                 </View>
-                <View className="flex-1">
-                  <Text className="font-body-semibold text-base text-on-surface">
-                    Order #{o.id}
-                  </Text>
-                  <Text className="font-body text-xs text-on-surface-variant">
-                    {new Date(o.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}{' '}
-                    • {o.merchantName}
-                  </Text>
-                </View>
-                <View className="items-end gap-1">
-                  <Text className="font-body-semibold text-base text-on-surface">
-                    {formatPrice(o.total)}
-                  </Text>
-                  <Badge variant={statusVariant[o.status]} label={statusLabel[o.status]} />
-                </View>
+
+                {/* Reorder button — only on delivered orders */}
+                {o.status === 'delivered' && (
+                  <View className="mt-3 flex-row items-center gap-2 border-t border-outline-variant/50 pt-3">
+                    <Button
+                      label="Reorder"
+                      icon="replay"
+                      size="sm"
+                      variant="secondary"
+                      className="flex-1"
+                      onPress={() => handleReorder(o)}
+                    />
+                  </View>
+                )}
+
+                {/* Scheduled indicator */}
+                {o.scheduledFor && (
+                  <View className="mt-2 flex-row items-center gap-1.5">
+                    <Icon name="calendar_today" size={13} color="#737973" />
+                    <Text className="font-body text-xs text-on-surface-variant">
+                      Scheduled: {new Date(o.scheduledFor).toLocaleString()}
+                    </Text>
+                  </View>
+                )}
               </View>
-
-              {/* Reorder button — only on delivered orders */}
-              {o.status === 'delivered' && (
-                <View className="mt-3 flex-row items-center gap-2 border-t border-outline-variant pt-3">
-                  <Button
-                    label="Reorder"
-                    icon="replay"
-                    size="sm"
-                    variant="secondary"
-                    className="flex-1"
-                    onPress={() => handleReorder(o)}
-                  />
-                </View>
-              )}
-
-              {/* Scheduled indicator */}
-              {o.scheduledFor && (
-                <View className="mt-2 flex-row items-center gap-1.5">
-                  <Icon name="calendar_today" size={13} color="#737973" />
-                  <Text className="font-body text-xs text-on-surface-variant">
-                    Scheduled: {new Date(o.scheduledFor).toLocaleString()}
-                  </Text>
-                </View>
-              )}
             </Pressable>
           ))}
         </View>

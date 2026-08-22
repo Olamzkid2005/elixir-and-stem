@@ -20,22 +20,28 @@ export function FeaturedCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} className="mr-4 w-64 active:opacity-90">
-      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-40 w-64 rounded-2xl" />
-      <View className="mt-3 flex-row items-center justify-between">
-        <Badge variant="secondary" label={strainLabel(product)} />
-        <View className="flex-row items-center gap-1">
-          <Icon name="star" size={14} color="#e9c176" />
-          <Text className="font-body-semibold text-xs text-on-surface">{product.rating}</Text>
+    <Pressable
+      onPress={onPress}
+      className="mr-4 w-64 overflow-hidden rounded-3xl bg-surface-container-lowest shadow-elevation-2 active:scale-[0.98]"
+      style={{ elevation: 2 }}
+    >
+      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-40 w-64 rounded-t-3xl" />
+      <View className="p-3">
+        <View className="flex-row items-center justify-between">
+          <Badge variant="secondary" label={strainLabel(product)} className="px-2 py-0.5" />
+          <View className="flex-row items-center gap-1">
+            <Icon name="star" size={14} color="#e9c176" />
+            <Text className="font-body-semibold text-xs text-on-surface">{product.rating}</Text>
+          </View>
         </View>
+        <Text className="mt-2 font-headline text-lg text-on-surface">{product.name}</Text>
+        <Text className="font-body text-sm text-on-surface-variant">
+          {product.thcPct}% THC • {product.cbdPct}% CBD
+        </Text>
+        <Text className="mt-1 font-body-semibold text-sm text-secondary">
+          From {formatPrice(product.weightOptions[0].price)} / {product.weightOptions[0].label}
+        </Text>
       </View>
-      <Text className="mt-2 font-headline text-lg text-on-surface">{product.name}</Text>
-      <Text className="font-body text-sm text-on-surface-variant">
-        {product.thcPct}% THC • {product.cbdPct}% CBD
-      </Text>
-      <Text className="mt-1 font-body-semibold text-sm text-secondary">
-        From {formatPrice(product.weightOptions[0].price)} / {product.weightOptions[0].label}
-      </Text>
     </Pressable>
   );
 }
@@ -52,11 +58,12 @@ export function ProductRowCard({
   return (
     <Pressable
       onPress={onPress}
-      className="mb-3 flex-row items-center gap-4 rounded-2xl bg-surface-container-lowest p-3 active:bg-surface-container"
+      className="mb-3 flex-row items-center gap-4 overflow-hidden rounded-3xl bg-surface-container-lowest p-3 shadow-elevation-1 active:bg-surface-container"
+      style={{ elevation: 1 }}
     >
-      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-20 w-20 rounded-xl" iconSize={28} />
+      <ProductImage imageUrl={product.imageUrl} color={product.imageColor} className="h-20 w-20 rounded-2xl" iconSize={28} />
       <View className="flex-1">
-        <Badge variant="outline" label={strainLabel(product)} className="mb-1 px-2 py-0.5" />
+        <Badge variant="outline" label={strainLabel(product)} className="mb-1 self-start px-2 py-0.5" />
         <Text className="font-headline text-base text-on-surface">{product.name}</Text>
         <Text className="font-body text-xs text-on-surface-variant">
           {product.thcPct ? `${product.thcPct}% THC` : product.category}
@@ -69,9 +76,9 @@ export function ProductRowCard({
       <Pressable
         hitSlop={8}
         onPress={() => add(product, product.weightOptions[0])}
-        className="h-10 w-10 items-center justify-center"
+        className="h-11 w-11 items-center justify-center rounded-2xl bg-secondary-container active:bg-primary"
       >
-        <Icon name="add_circle" size={28} color="#4d644b" />
+        <Icon name="add" size={22} color="#4d644b" />
       </Pressable>
     </Pressable>
   );
