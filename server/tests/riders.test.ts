@@ -7,6 +7,7 @@ import {
 
 let riderUserId: string;
 let riderId: string;
+const riderEmail = `test-rider-${Date.now()}@example.com`;
 
 beforeAll(async () => {
   await setupTestData();
@@ -26,11 +27,12 @@ describe('Riders Routes', () => {
       const signupRes = await request(app)
         .post('/auth/signup')
         .send({
-          email: 'test-rider@example.com',
+          email: riderEmail,
           password: 'password123',
-          role: 'merchant', // riders are created from merchant users
+          role: 'merchant',
         });
 
+      expect(signupRes.status).toBe(200);
       riderUserId = signupRes.body.user.id;
 
       const res = await request(app)
@@ -81,12 +83,12 @@ describe('Riders Routes', () => {
     });
   });
 
-  describe('GET /riders', () => {
-    it('should list all riders', async () => {
+  describe('GET /riders/list', () => {
+    it('should list all riders (admin only)', async () => {
       const admin = getAdmin();
 
       const res = await request(app)
-        .get('/riders')
+        .get('/riders/list')
         .set('Authorization', `Bearer ${admin.token}`);
 
       expect(res.status).toBe(200);
@@ -98,7 +100,7 @@ describe('Riders Routes', () => {
       const customer = getCustomer();
 
       const res = await request(app)
-        .get('/riders')
+        .get('/riders/list')
         .set('Authorization', `Bearer ${customer.token}`);
 
       expect(res.status).toBe(403);
@@ -109,7 +111,6 @@ describe('Riders Routes', () => {
     it('should list only online riders', async () => {
       const admin = getAdmin();
 
-      // Initially no online riders
       const res = await request(app)
         .get('/riders/online')
         .set('Authorization', `Bearer ${admin.token}`);
@@ -118,6 +119,65 @@ describe('Riders Routes', () => {
       expect(Array.isArray(res.body)).toBe(true);
       // All returned riders should be online
       expect(res.body.every((r: any) => r.isOnline === true)).toBe(true);
+    });
+  });
+
+  describe('GET /riders/:id/location', () => {
+    it('should get rider location', async () => {
+      const admin = getAdmin();
+
+      // First set location
+      await request(app)
+        .patch(`/riders/${riderId}/location`)
+        .set('Authorization', `Bearer ${admin.token}`)
+        .send({ lat: 6.5244, lng: 3.3792 });
+
+      const res = await request(app)
+        .get(`/riders/${riderId}/location`)
+        .set('Authorization', `Bearer ${admin.token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.lat).toBe(6.5244);
+      expect(res.body.lng).toBe(3.3792);
+      expect(res.body.id).toBe(riderId);
+    });
+
+    it('should return 404 for non-existent rider', async () => {
+      const admin = getAdmin();
+
+      const res = await request(app)
+        .get('/riders/nonexistent/location')
+        .set('Authorization', `Bearer ${admin.token}`);
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /riders/order/:orderId', () => {
+    it('should return null rider for order with no rider assigned', async () => {
+      const customer = getCustomer();
+
+      // Create an order as customer
+      const product = getProduct();
+      const orderRes = await request(app)
+        .post('/orders')
+        .set('Authorization', `Bearer ${customer.token}`)
+        .send({
+          merchantId: product.merchantId,
+          items: [{ productId: product.id, quantity: 1, weightLabel: '3.5g' }],
+          deliveryAddress: '123 Test St, Lagos',
+        });
+
+      expect(orderRes.status).toBe(201);
+      const orderId = orderRes.body.id;
+
+      const admin = getAdmin();
+      const res = await request(app)
+        .get(`/riders/order/${orderId}`)
+        .set('Authorization', `Bearer ${admin.token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.rider).toBeNull();
     });
   });
 
@@ -192,6 +252,17 @@ describe('Riders Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.isOnline).toBe(true);
+    });
+
+    it('should reject non-existent rider', async () => {
+      const admin = getAdmin();
+
+      const res = await request(app)
+        .patch('/riders/nonexistent/online')
+        .set('Authorization', `Bearer ${admin.token}`)
+        .send({ isOnline: true });
+
+      expect(res.status).toBe(404);
     });
   });
 });

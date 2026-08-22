@@ -53,6 +53,7 @@ export async function setupTestData() {
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.rider.deleteMany();
   await prisma.merchant.deleteMany();
   await prisma.user.deleteMany({
     where: {
@@ -173,6 +174,7 @@ export async function cleanupTestData() {
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
+  await prisma.rider.deleteMany();
   await prisma.merchant.deleteMany();
   await prisma.user.deleteMany({
     where: {

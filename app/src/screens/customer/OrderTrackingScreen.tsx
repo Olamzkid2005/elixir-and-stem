@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { useOrders } from '@/store/orders';
+import { useRiderLocation } from '@/lib/useRiderLocation';
 import { formatPrice, type OrderStatus } from '@/api/types';
 import { cn } from '@/lib/utils';
 import type { RootStackParamList } from '@/navigation/types';
@@ -53,6 +54,10 @@ export function OrderTrackingScreen({ route }: Props) {
   const activeIdx = STEPS.findIndex((s) => s.status === order.status);
   const isLive = order.status !== 'delivered' && order.status !== 'rejected';
   const isDelivered = order.status === 'delivered';
+  
+  // Poll rider location when order is in transit
+  const shouldTrackRider = isLive && ['rider_assigned', 'picked_up', 'out_for_delivery'].includes(order.status);
+  const { rider: liveRider } = useRiderLocation(order.id, (order as any).riderId, shouldTrackRider);
 
   return (
     <Screen>
@@ -78,22 +83,25 @@ export function OrderTrackingScreen({ route }: Props) {
           </View>
         )}
 
-        {/* Courier */}
-        {order.driver && isLive && (
+        {/* Courier / Rider */}
+        {(liveRider || order.driver) && isLive && (
           <View className="mt-3 flex-row items-center justify-between rounded-2xl bg-surface-container-lowest p-4">
             <View className="flex-row items-center gap-3">
               <View className="h-12 w-12 items-center justify-center rounded-full bg-secondary-container">
-                <Icon name="person" size={24} color="#4d644b" />
+                <Icon name="local_shipping" size={24} color="#4d644b" />
               </View>
               <View>
                 <Text className="font-body-semibold text-base text-on-surface">
-                  {order.driver.name}
+                  {liveRider?.vehicleType === 'motorcycle' ? 'Motorcycle Rider' : 'Your Courier'}
                 </Text>
                 <View className="flex-row items-center gap-1">
                   <Icon name="star" size={13} color="#e9c176" />
                   <Text className="font-body text-xs text-on-surface-variant">
-                    {order.driver.rating} Courier
+                    {(liveRider?.rating ?? order.driver?.rating ?? 5.0).toFixed(1)} Rating
                   </Text>
+                  {liveRider?.lat && liveRider?.lng && (
+                    <Text className="font-body text-xs text-primary"> • Live tracking</Text>
+                  )}
                 </View>
               </View>
             </View>

@@ -117,7 +117,7 @@ cd server && npm test       # 92 tests across 10 suites
 - Merchant can mark order ready_for_pickup when prepared
 - Bank account field added to Merchant model for payouts
 
-## Test coverage (127 tests, 13 suites)
+## Test coverage (131 tests, 13 suites)
 
 | Suite | Tests |
 |-------|-------|
@@ -131,8 +131,8 @@ cd server && npm test       # 92 tests across 10 suites
 | admin.test.ts | 7 |
 | pushTokens.test.ts | 14 |
 | search.test.ts | 10 |
-| riders.test.ts | 12 |
-| delivery.test.ts | 11 |
+| riders.test.ts | 16 |
+| delivery.test.ts | 7 |
 | tax.test.ts | 15 |
 
 ## Cannabis Compliance Constraints

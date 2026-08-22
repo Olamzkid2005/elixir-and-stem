@@ -336,4 +336,43 @@ export const api = {
       body: JSON.stringify({ status }),
     });
   },
+
+  // ── Rider Tracking ──────────────────────────────────────
+
+  async getRiderLocation(riderId: string): Promise<{
+    id: string;
+    lat: number | null;
+    lng: number | null;
+    isOnline: boolean;
+    vehicleType: string | null;
+    rating: number;
+  } | null> {
+    if (useMock) {
+      return { id: riderId, lat: 6.43, lng: 3.42, isOnline: true, vehicleType: 'motorcycle', rating: 5.0 };
+    }
+    try {
+      return await request(`/riders/${riderId}/location`);
+    } catch {
+      return null;
+    }
+  },
+
+  async getOrderRider(orderId: string): Promise<{
+    id: string;
+    lat: number | null;
+    lng: number | null;
+    isOnline: boolean;
+    vehicleType: string | null;
+    rating: number;
+  } | null> {
+    if (useMock) {
+      return { id: 'r1', lat: 6.43, lng: 3.42, isOnline: true, vehicleType: 'motorcycle', rating: 5.0 };
+    }
+    try {
+      const data = await request<{ rider: any }>(`/riders/order/${orderId}`);
+      return data.rider;
+    } catch {
+      return null;
+    }
+  },
 };

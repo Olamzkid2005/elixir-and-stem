@@ -16,10 +16,11 @@ beforeAll(async () => {
   const signupRes = await request(app)
     .post('/auth/signup')
     .send({
-      email: 'delivery-rider@example.com',
+      email: `delivery-rider-${Date.now()}@example.com`,
       password: 'password123',
       role: 'merchant',
     });
+  expect(signupRes.status).toBe(200);
 
   const riderRes = await request(app)
     .post('/riders')
