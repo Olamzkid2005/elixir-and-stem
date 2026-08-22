@@ -9,6 +9,7 @@ interface AuthState {
   setAgeVerified: (v: boolean) => void;
   setRole: (r: Role) => void;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithOAuth: (provider: 'google' | 'apple', email: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -21,6 +22,11 @@ export const useAuth = create<AuthState>((set, get) => ({
   signIn: async (email, password) => {
     const role = get().role ?? 'customer';
     const { user } = await api.signIn(email, password, role);
+    set({ user });
+  },
+  signInWithOAuth: async (provider, email, name) => {
+    const role = get().role ?? 'customer';
+    const { user } = await api.oauthSignIn(provider, email, name, role);
     set({ user });
   },
   signOut: async () => {

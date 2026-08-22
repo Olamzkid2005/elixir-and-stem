@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Icon } from '@/components/ui/Icon';
 import { useAuth } from '@/store/auth';
+import { useOAuth } from '@/lib/useOAuth';
 import { cn } from '@/lib/utils';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -20,6 +21,7 @@ export function SignInScreen({ navigation }: Props) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, role } = useAuth();
+  const { signInWithGoogle, signInWithApple, loading: oauthLoading, error: oauthError } = useOAuth();
 
   const validate = () => {
     if (!/^\S+@\S+\.\S+$/.test(email)) return 'Enter a valid email address.';
@@ -148,9 +150,26 @@ export function SignInScreen({ navigation }: Props) {
               </Text>
               <View className="h-px flex-1 bg-outline-variant" />
             </View>
+            {oauthError ? (
+              <Text className="mb-3 text-center font-body text-sm text-error">{oauthError}</Text>
+            ) : null}
             <View className="flex-row gap-3">
-              <Button label="Google" variant="outline" className="flex-1" onPress={() => {}} />
-              <Button label="Apple" variant="outline" className="flex-1" onPress={() => {}} />
+              <Button
+                label="Google"
+                icon="mail"
+                variant="outline"
+                className="flex-1"
+                loading={oauthLoading}
+                onPress={signInWithGoogle}
+              />
+              <Button
+                label="Apple"
+                icon="person"
+                variant="outline"
+                className="flex-1"
+                loading={oauthLoading}
+                onPress={signInWithApple}
+              />
             </View>
 
             <Text className="mb-8 mt-10 text-center font-body text-xs leading-5 text-on-surface-variant">

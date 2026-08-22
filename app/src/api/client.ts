@@ -80,6 +80,28 @@ export const api = {
     return data;
   },
 
+  async oauthSignIn(provider: 'google' | 'apple', email: string, name?: string, role: Role = 'customer') {
+    if (useMock) {
+      return {
+        token: 'mock-oauth-token',
+        user: {
+          id: role === 'merchant' ? 'u-m1' : 'u-c1',
+          email,
+          name: name ?? email.split('@')[0],
+          role,
+          ageVerified: true,
+        } as User,
+        isNewUser: false,
+      };
+    }
+    const data = await request<{ token: string; user: User; isNewUser: boolean }>('/auth/oauth', {
+      method: 'POST',
+      body: JSON.stringify({ provider, email, name, role }),
+    });
+    await setToken(data.token);
+    return data;
+  },
+
   async registerMerchant(payload: {
     businessName: string;
     licenseNumber: string;

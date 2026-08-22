@@ -117,7 +117,7 @@ cd server && npm test       # 92 tests across 10 suites
 - Merchant can mark order ready_for_pickup when prepared
 - Bank account field added to Merchant model for payouts
 
-## Test coverage (131 tests, 13 suites)
+## Test coverage (137 tests, 13 suites)
 
 | Suite | Tests |
 |-------|-------|
@@ -134,6 +134,7 @@ cd server && npm test       # 92 tests across 10 suites
 | riders.test.ts | 16 |
 | delivery.test.ts | 7 |
 | tax.test.ts | 15 |
+| auth.test.ts (OAuth) | 6 |
 
 ## Cannabis Compliance Constraints
 
@@ -157,12 +158,21 @@ cd server && npm test       # 92 tests across 10 suites
 - Default region: Lagos, Nigeria
 - Requires Google Maps API key (see setup below)
 
+### Apple/Google Sign-In ✅
+- `POST /auth/oauth` endpoint — creates/finds user by email, returns JWT
+- `useOAuth` hook — Google via `expo-auth-session`, Apple via `expo-apple-authentication`
+- Sign-in screen wired with Google + Apple buttons
+- OAuth users auto-created as customers, merchants go through onboarding
+- `isNewUser` flag returned for post-signup flow
+- Requires Google Web Client ID + Apple Service ID in `app.json`
+
 ## Known gaps
 
 - **Google Maps API key** — needs a real key set in `app.json` and Google Cloud Console
-- **Payments** — pay-on-delivery only for MVP; add Aeropay/Dutchie in Phase 3
+- **Google OAuth Web Client ID** — needs to be set in `app.json` extra section
+- **Apple Service ID** — needs to be configured in Apple Developer Console
+- **Payments** — pay-on-delivery only for MVP; add Aeropay/Dutchie in Phase 4
 - **Rider self-location** — riders should broadcast their own GPS (currently admin-only endpoint)
-- **Social login** — Apple/Google Sign-In (Phase 3)
 - **Frontend tests** — blocked by Expo SDK 54 reanimated plugin in Jest
 
 ## Recent changes / gotchas
@@ -196,6 +206,30 @@ cd server && npm test       # 92 tests across 10 suites
 6. For iOS: add `NSLocationWhenInUseUsageDescription` to Info.plist (already handled by expo-location plugin)
 
 Free tier: $200/month credit (enough for development and early users)
+
+## OAuth Setup (Google + Apple)
+
+### Google Sign-In
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable **Google Sign-In** API
+3. Create **OAuth 2.0 Web Client ID** (not Android/iOS — Expo Go uses web client)
+4. Add to `app.json`:
+```json
+"extra": { "googleWebClientId": "YOUR_WEB_CLIENT_ID.apps.googleusercontent.com" }
+```
+5. Add authorized redirect URI in Google Console: `https://auth.expo.io/@your-username/elixir-and-stem`
+
+### Apple Sign-In
+1. Go to [Apple Developer Console](https://developer.apple.com/)
+2. Enable **Sign In with Apple** capability for your app
+3. Create a **Services ID** (for web) and configure it
+4. Add to `app.json` under `ios`:
+```json
+"ios": {
+  "usesAppleSignIn": true
+}
+```
+5. Apple Sign-In works automatically on iOS in Expo Go and dev builds
 
 ## Out of scope this phase
 
